@@ -1,6 +1,7 @@
 """Bounded arithmetic interpreter; no eval, calls, attributes or names."""
 
 import ast
+import re
 from dataclasses import dataclass
 from decimal import Decimal, DecimalException, localcontext
 
@@ -29,6 +30,13 @@ def calculate(expression: str) -> Calculation:
         raise ExpressionError("Écrivez une expression de 1 à 256 caractères.")
     if any(char not in "0123456789.+-*/() \t" for char in normalized):
         raise ExpressionError("Utilisez uniquement des nombres, +, −, ×, ÷ et des parenthèses.")
+
+    # Handwritten numbers may contain leading zeroes, which Python's parser rejects.
+    def canonical_number(match: re.Match) -> str:
+        integer, dot, fraction = match.group().partition(".")
+        return str(int(integer or "0")) + dot + fraction
+
+    normalized = re.sub(r"\d+(?:\.\d*)?|\.\d+", canonical_number, normalized)
     try:
         tree = ast.parse(normalized, mode="eval")
     except (SyntaxError, ValueError, RecursionError) as exc:

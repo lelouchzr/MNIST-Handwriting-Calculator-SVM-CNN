@@ -2,6 +2,7 @@ export type Point = [number, number];
 export type Stroke = Point[];
 export type Alternative = { label: string; confidence: number };
 export type Token = Alternative & {
+  corrected?: boolean;
   alternatives: Alternative[];
   thumbnail: string;
   box: number[];

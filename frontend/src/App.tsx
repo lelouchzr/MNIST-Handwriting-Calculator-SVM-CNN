@@ -38,6 +38,10 @@ export default function App() {
   const revision = useRef(0);
 
   useEffect(() => {
+    setStorageWarning(!saveHistory(history));
+  }, [history]);
+
+  useEffect(() => {
     const controller = new AbortController();
     request<Health>("health", undefined, controller.signal)
       .then(setHealth)
@@ -126,11 +130,7 @@ export default function App() {
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
       };
-      setHistory((previous) => {
-        const next = [entry, ...previous].slice(0, 20);
-        setStorageWarning(!saveHistory(next));
-        return next;
-      });
+      setHistory((previous) => [entry, ...previous].slice(0, 20));
     } catch (cause) {
       if (version === revision.current)
         setError(
@@ -144,7 +144,7 @@ export default function App() {
   function correct(index: number, label: string) {
     invalidate();
     const next = tokens.map((token, position) =>
-      position === index ? { ...token, label } : token,
+      position === index ? { ...token, label, corrected: true } : token,
     );
     setTokens(next);
     setExpression(next.map((token) => token.label).join(""));
@@ -158,7 +158,12 @@ export default function App() {
     const field = input.current;
     const start = field?.selectionStart ?? expression.length;
     const end = field?.selectionEnd ?? start;
-    setExpression(expression.slice(0, start) + symbol + expression.slice(end));
+    setExpression(
+      (expression.slice(0, start) + symbol + expression.slice(end)).slice(
+        0,
+        256,
+      ),
+    );
     field?.focus();
     requestAnimationFrame(() =>
       field?.setSelectionRange(start + symbol.length, start + symbol.length),
@@ -309,10 +314,14 @@ export default function App() {
                           <strong>{token.label}</strong>
                           <span
                             className={
-                              token.confidence < 0.65 ? "uncertain" : ""
+                              !token.corrected && token.confidence < 0.65
+                                ? "uncertain"
+                                : ""
                             }
                           >
-                            {Math.round(token.confidence * 100)} %
+                            {token.corrected
+                              ? "corrigé"
+                              : `${Math.round(token.confidence * 100)} %`}
                           </span>
                         </button>
                       </div>
@@ -464,7 +473,6 @@ export default function App() {
                     className="text-button"
                     onClick={() => {
                       setHistory([]);
-                      setStorageWarning(!saveHistory([]));
                     }}
                   >
                     Vider

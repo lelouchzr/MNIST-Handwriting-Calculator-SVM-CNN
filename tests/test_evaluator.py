@@ -48,3 +48,15 @@ def test_rejects_invalid_or_unbounded_input(expression):
 
 def test_steps_follow_precedence():
     assert calculate("2+3*4").steps == ["3 × 4 = 12", "2 + 12 = 14"]
+
+
+@pytest.mark.parametrize(
+    ("expression", "expected"),
+    [
+        ("09+02", "11"),
+        ("000.5+.25", "0.75"),
+        ("00.", "0"),
+    ],
+)
+def test_accepts_handwritten_leading_zeroes(expression, expected):
+    assert calculate(expression).result == expected
