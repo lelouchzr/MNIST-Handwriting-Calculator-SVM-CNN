@@ -1,0 +1,13 @@
+{
+  "name": "MNIST + synthetic operators / HOG + calibrated linear SVM",
+  "seed": 42,
+  "mnist_train_samples": 20000,
+  "mnist_test_samples": 2000,
+  "mnist_test_accuracy": 0.9565,
+  "synthetic_operator_train_samples": 3900,
+  "synthetic_operator_test_samples": 600,
+  "synthetic_operator_test_accuracy": 0.9933333333333333,
+  "mnist_source": "https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz",
+  "mnist_sha256": "731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1",
+  "limitations": "Synthetic operator tests are not real handwriting validation."
+}

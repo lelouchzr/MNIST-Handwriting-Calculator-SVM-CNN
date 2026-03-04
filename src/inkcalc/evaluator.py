@@ -22,7 +22,9 @@ def format_number(value: Decimal) -> str:
 
 
 def calculate(expression: str) -> Calculation:
-    normalized = expression.strip().translate(str.maketrans({"×": "*", "÷": "/", "−": "-", ",": "."}))
+    normalized = expression.strip().translate(
+        str.maketrans({"×": "*", "÷": "/", "−": "-", ",": "."})
+    )
     if not normalized or len(normalized) > 256:
         raise ExpressionError("Écrivez une expression de 1 à 256 caractères.")
     if any(char not in "0123456789.+-*/() \t" for char in normalized):
@@ -30,7 +32,9 @@ def calculate(expression: str) -> Calculation:
     try:
         tree = ast.parse(normalized, mode="eval")
     except (SyntaxError, ValueError, RecursionError) as exc:
-        raise ExpressionError("L’expression est incomplète ou les parenthèses sont mal placées.") from exc
+        raise ExpressionError(
+            "L’expression est incomplète ou les parenthèses sont mal placées."
+        ) from exc
     if sum(1 for _ in ast.walk(tree)) > 96:
         raise ExpressionError("L’expression contient trop d’opérations.")
     steps: list[str] = []
@@ -55,7 +59,9 @@ def calculate(expression: str) -> Calculation:
                 if right == 0:
                     raise ExpressionError("La division par zéro n’est pas définie.")
                 value, symbol = left / right, "÷"
-            steps.append(f"{format_number(left)} {symbol} {format_number(right)} = {format_number(value)}")
+            steps.append(
+                f"{format_number(left)} {symbol} {format_number(right)} = {format_number(value)}"
+            )
         else:
             raise ExpressionError("Cette opération n’est pas prise en charge.")
         if not value.is_finite() or abs(value) > Decimal("1e15"):

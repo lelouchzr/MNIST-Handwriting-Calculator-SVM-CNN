@@ -31,21 +31,24 @@ def operator_image(symbol: str, rng: np.random.Generator) -> Image.Image:
         if symbol == "+":
             draw.line([(cx, y0), (cx + int(rng.integers(-3, 4)), y1)], fill=255, width=width)
         elif symbol == "/":
-            if rng.random() < .5:
+            if rng.random() < 0.5:
                 image = Image.new("L", (96, 96))
                 ImageDraw.Draw(image).line([(x0 + 6, y1), (x1 - 6, y0)], fill=255, width=width)
             else:
                 for y in [y0, y1]:
-                    draw.ellipse((cx - width // 2, y - width // 2,
-                                  cx + width // 2, y + width // 2), fill=255)
+                    draw.ellipse(
+                        (cx - width // 2, y - width // 2, cx + width // 2, y + width // 2), fill=255
+                    )
     elif symbol == "*":
         draw.line([(x0, y0), (x1, y1)], fill=255, width=width)
         draw.line([(x1, y0), (x0, y1)], fill=255, width=width)
     else:
         angles = np.linspace(-1.15, 1.15, 28)
         direction = -1 if symbol == "(" else 1
-        points = [(cx + direction * (x1 - x0) * .5 * np.cos(a),
-                   cy + (y1 - y0) * .55 * np.sin(a)) for a in angles]
+        points = [
+            (cx + direction * (x1 - x0) * 0.5 * np.cos(a), cy + (y1 - y0) * 0.55 * np.sin(a))
+            for a in angles
+        ]
         draw.line(points, fill=255, width=width, joint="curve")
     return image.rotate(float(rng.uniform(-12, 12)), Image.Resampling.BILINEAR)
 
@@ -64,7 +67,7 @@ def main() -> None:
         urlretrieve(MNIST_URL, dataset)
     rng = np.random.default_rng(42)
     with np.load(dataset, allow_pickle=False) as data:
-        indices = rng.permutation(len(data["x_train"]))[:args.digits]
+        indices = rng.permutation(len(data["x_train"]))[: args.digits]
         print(f"Extracting features from {args.digits} MNIST digits…", flush=True)
         x = [features(Image.fromarray(img)) for img in data["x_train"][indices]]
         y = [str(label) for label in data["y_train"][indices]]
@@ -86,14 +89,16 @@ def main() -> None:
     operator_accuracy = float(accuracy_score(synthetic_y, model.predict(synthetic_x)))
     metadata = {
         "name": "MNIST + synthetic operators / HOG + calibrated linear SVM",
-        "seed": 42, "mnist_train_samples": args.digits,
-        "mnist_test_samples": 2000, "mnist_test_accuracy": digit_accuracy,
+        "seed": 42,
+        "mnist_train_samples": args.digits,
+        "mnist_test_samples": 2000,
+        "mnist_test_accuracy": digit_accuracy,
         "synthetic_operator_train_samples": 3900,
         "synthetic_operator_test_samples": 600,
         "synthetic_operator_test_accuracy": operator_accuracy,
         "mnist_source": MNIST_URL,
         "mnist_sha256": hashlib.sha256(dataset.read_bytes()).hexdigest(),
-        "limitations": "Synthetic operator tests are not real handwriting validation."
+        "limitations": "Synthetic operator tests are not real handwriting validation.",
     }
     output = ROOT / "models"
     output.mkdir(exist_ok=True)
