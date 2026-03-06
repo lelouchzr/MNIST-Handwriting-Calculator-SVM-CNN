@@ -17,6 +17,7 @@ from inkcalc.features import features
 
 ROOT = Path(__file__).resolve().parents[1]
 MNIST_URL = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz"
+MNIST_SHA256 = "731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1"
 SYMBOLS = ["+", "-", "*", "/", "(", ")"]
 
 
@@ -64,7 +65,16 @@ def main() -> None:
     dataset = cache / "mnist.npz"
     if not dataset.exists():
         print("Downloading MNIST…", flush=True)
-        urlretrieve(MNIST_URL, dataset)
+        temporary = dataset.with_suffix(".part")
+        try:
+            urlretrieve(MNIST_URL, temporary)
+            if hashlib.sha256(temporary.read_bytes()).hexdigest() != MNIST_SHA256:
+                raise ValueError("MNIST checksum mismatch; refusing to train on altered data.")
+            temporary.replace(dataset)
+        finally:
+            temporary.unlink(missing_ok=True)
+    if hashlib.sha256(dataset.read_bytes()).hexdigest() != MNIST_SHA256:
+        raise ValueError("Cached MNIST checksum mismatch. Remove .cache/mnist.npz and retry.")
     rng = np.random.default_rng(42)
     with np.load(dataset, allow_pickle=False) as data:
         indices = rng.permutation(len(data["x_train"]))[: args.digits]

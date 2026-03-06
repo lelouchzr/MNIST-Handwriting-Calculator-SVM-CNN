@@ -8,10 +8,10 @@ canvas, editable predictions and browser-local calculation history.
 
 ## Development
 
-Requires Python 3.11+ (3.12 recommended), Node.js 22+, and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.12, Node.js 24+, and [uv](https://docs.astral.sh/uv/).
 
 ```sh
-uv sync
+uv sync --locked
 uv run uvicorn inkcalc.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
@@ -24,6 +24,64 @@ npm run dev
 ```
 
 Open the Vite URL. Its `/api` proxy connects to the local Python service.
+
+The trained model is included, so normal startup needs no dataset download.
+Recognition and calculation run on your computer. History is stored in your browser;
+drawings are not persisted. No external OCR or hosted AI service is called.
+
+## What it does
+
+- Draw with a mouse, finger or pen; undo strokes and export the drawing as PNG.
+- Recognize digits and + − × ÷ ( ), with symbol previews and alternative predictions.
+- Correct a prediction or type an expression directly; decimal commas are accepted.
+- Evaluate parentheses, operator precedence and negative numbers with visible steps.
+- Keep the latest 20 calculations locally, with a clear-history action.
+- Use the workspace on desktop and mobile, including a keyboard-only calculation path.
+
+Recognition is imperfect: leave space between symbols, write on one line, and check
+the predictions before calculating. MNIST test-digit accuracy is **95.65% on 2,000
+held-out samples**. This is not an end-to-end handwriting accuracy claim.
+
+## Run the built application
+
+```sh
+uv sync --locked
+npm --prefix frontend ci
+npm --prefix frontend run build
+uv run uvicorn inkcalc.api:app --host 127.0.0.1 --port 8000
+```
+
+Open <http://127.0.0.1:8000>. Build the frontend before starting this single-server
+mode. The API documentation is available at <http://127.0.0.1:8000/docs>.
+
+## Checks
+
+```sh
+uv run pytest -q
+uv run ruff check src tests scripts
+npm --prefix frontend test
+npm --prefix frontend run build
+```
+
+GitHub Actions runs the backend and frontend checks independently on every push.
+The backend tests cover arithmetic limits, bad API requests, stroke grouping and
+real-model symbol classification. Frontend tests cover corrupt or unavailable
+browser storage, persistence and the history limit.
+
+## Layout
+
+```text
+src/inkcalc/       Python API, arithmetic interpreter, preprocessing and recognition
+frontend/src/     React workspace, pointer canvas and browser-local history
+models/           Trained model and generated evaluation metrics
+scripts/train.py  Reproducible MNIST + original synthetic-operator training
+tests/            Backend unit and API tests
+docs/model.md     Data provenance, evaluation and limitations
+```
+
+Retrain with `uv run python scripts/train.py`. See [the model card](docs/model.md)
+for data sources, checksums, evaluation protocol and limits. Model probabilities
+are estimates, and manually corrected symbols are explicitly labelled as corrected.
 
 ## Inspiration
 
