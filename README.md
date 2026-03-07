@@ -33,12 +33,22 @@ drawings are not persisted. No external OCR or hosted AI service is called.
 
 ## What it does
 
-- Draw with a mouse, finger or pen; undo strokes and export the drawing as PNG.
+- Draw with a mouse, finger or pen; undo/redo drawing actions and export as PNG.
 - Recognize digits and + − × ÷ ( ), with symbol previews and alternative predictions.
 - Correct a prediction or type an expression directly; decimal commas are accepted.
 - Evaluate parentheses, operator precedence and negative numbers with visible steps.
 - Keep the latest 20 calculations locally, with a clear-history action.
 - Use the workspace on desktop and mobile, including a keyboard-only calculation path.
+
+The interface follows generated desktop and mobile references, then translates
+them into real controls: a square-grid notebook, compact symbol review, a prominent
+result and a flat history list. Fonts are served locally. See the
+[visual direction and reference analysis](docs/design/art-direction.md).
+
+Keyboard shortcuts: Ctrl/⌘ Z to undo, Ctrl/⌘ Shift Z to redo, Enter in the expression
+field to calculate, and `?` outside editable fields to open help. Escape closes help
+or the symbol correction controls. History entries can be reopened without creating
+a duplicate calculation.
 
 Recognition is imperfect: leave space between symbols, write on one line, and check
 the predictions before calculating. MNIST test-digit accuracy is **95.65% on 2,000

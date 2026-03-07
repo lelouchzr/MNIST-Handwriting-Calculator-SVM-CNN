@@ -47,12 +47,13 @@ const glyphs: Record<string, Stroke[]> = {
   ],
 };
 
-export function sampleExpression(): Stroke[] {
+export function sampleExpression(logicalHeight = 360): Stroke[] {
+  const top = Math.max(20, (logicalHeight - 132) / 2);
   return ["1", "2", "+", "7"].flatMap((glyph, index) =>
     glyphs[glyph].map((stroke) =>
       stroke.map(([x, y]): Point => [
         x * 1.65 + 215 + index * 145,
-        y * 1.65 + 100,
+        y * 1.65 + top,
       ]),
     ),
   );

@@ -8,8 +8,8 @@ export const HEIGHT = 360;
 
 function paint(context: CanvasRenderingContext2D, stroke: Stroke) {
   if (!stroke.length) return;
-  context.strokeStyle = "#263e33";
-  context.fillStyle = "#263e33";
+  context.strokeStyle = "#20211f";
+  context.fillStyle = "#20211f";
   context.lineWidth = 6;
   context.lineCap = "round";
   context.lineJoin = "round";
@@ -119,12 +119,12 @@ export function InkCanvas({ strokes, onChange }: Props) {
       />
       {!strokes.length && (
         <div className="paper-placeholder" aria-hidden="true">
-          <span>12 + 7</span>
-          <p>À vous de prendre la main.</p>
+          <span>Écrivez ici.</span>
+          <p>ou chargez un exemple pour commencer</p>
         </div>
       )}
       <span className="paper-mark" aria-hidden="true">
-        ESPACE D’ÉCRITURE / 01
+        01
       </span>
     </div>
   );
@@ -140,7 +140,7 @@ export function downloadInk(strokes: Stroke[]): void {
   const context = canvas.getContext("2d");
   if (!context) return;
   context.fillStyle = "white";
-  context.fillRect(0, 0, WIDTH, HEIGHT);
+  context.fillRect(0, 0, canvas.width, canvas.height);
   for (const stroke of strokes) paint(context, stroke);
   const link = document.createElement("a");
   link.download = "inkcalc-dessin.png";
