@@ -6,6 +6,8 @@ prediction, correct ambiguous symbols, and calculate without running arbitrary c
 Python handles image preparation, classification and arithmetic. React handles the
 canvas, editable predictions and browser-local calculation history.
 
+![InkCalc handwriting workspace](docs/workspace.jpg)
+
 ## Development
 
 Requires Python 3.12, Node.js 24+, and [uv](https://docs.astral.sh/uv/).
