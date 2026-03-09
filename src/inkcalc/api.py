@@ -23,7 +23,7 @@ class InkRequest(BaseModel):
     @model_validator(mode="after")
     def point_budget(self):
         if sum(map(len, self.strokes)) > 20000:
-            raise ValueError("Le dessin dépasse 20 000 points.")
+            raise ValueError("The drawing exceeds 20,000 points.")
         return self
 
 
@@ -67,7 +67,9 @@ def evaluate(request: ExpressionRequest):
 @app.post("/api/recognize")
 def recognize(request: InkRequest):
     if app.state.recognizer is None:
-        raise HTTPException(status_code=503, detail=app.state.model_error or "Modèle indisponible.")
+        raise HTTPException(
+            status_code=503, detail=app.state.model_error or "The recognition model is unavailable."
+        )
     try:
         tokens = app.state.recognizer.recognize(request.strokes)
     except ValueError as exc:

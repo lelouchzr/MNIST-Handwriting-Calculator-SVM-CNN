@@ -24,11 +24,11 @@ export function ResultPanel({
     >
       <div className="result-summary">
         <div className="result-label">
-          <h2 id="result-title">Résultat</h2>
+          <h2 id="result-title">Result</h2>
           <p>
             {calculation
               ? displayExpression(calculation.expression)
-              : "À vous de jouer."}
+              : "Your turn."}
           </p>
         </div>
         <div
@@ -42,7 +42,7 @@ export function ResultPanel({
       <div className="calculation-steps">
         {calculation ? (
           <>
-            <h3>Détail du calcul</h3>
+            <h3>Calculation steps</h3>
             {calculation.steps.length ? (
               <ol>
                 {calculation.steps.map((step, index) => (
@@ -55,9 +55,9 @@ export function ResultPanel({
           </>
         ) : (
           <p>
-            Le résultat et ses étapes
+            Your result and its steps
             <br />
-            s’afficheront ici.
+            will appear here.
           </p>
         )}
       </div>

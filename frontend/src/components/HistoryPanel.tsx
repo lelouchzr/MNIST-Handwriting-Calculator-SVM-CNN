@@ -25,14 +25,14 @@ export function HistoryPanel({
   const visible = expanded ? entries : entries.slice(0, 3);
   return (
     <section
-      id="historique"
+      id="history"
       ref={ref}
       className="history-panel"
       tabIndex={-1}
       aria-labelledby="history-title"
     >
       <div className="section-heading">
-        <h2 id="history-title">Derniers calculs</h2>
+        <h2 id="history-title">Recent calculations</h2>
         {entries.length > 3 && (
           <button
             className="text-button"
@@ -40,7 +40,7 @@ export function HistoryPanel({
             aria-expanded={expanded}
             aria-controls="history-entries"
           >
-            {expanded ? "Réduire" : "Tout voir"}
+            {expanded ? "Show less" : "View all"}
             {expanded ? <ArrowUp size={16} /> : <ArrowRight size={16} />}
           </button>
         )}
@@ -51,14 +51,14 @@ export function HistoryPanel({
             <li key={entry.id}>
               <button
                 onClick={() => onSelect(entry)}
-                aria-label={`Revoir ${displayExpression(entry.expression)}, résultat ${entry.result}`}
+                aria-label={`Review ${displayExpression(entry.expression)}, result ${entry.result}`}
               >
                 <span className="history-expression">
                   {displayExpression(entry.expression)}
                   <time dateTime={entry.createdAt}>
-                    {new Date(entry.createdAt).toLocaleString("fr-FR", {
+                    {new Date(entry.createdAt).toLocaleString("en-GB", {
                       day: "2-digit",
-                      month: "2-digit",
+                      month: "short",
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -71,26 +71,24 @@ export function HistoryPanel({
         </ol>
       ) : (
         <div className="history-empty">
-          <p>Aucun calcul pour le moment.</p>
+          <p>No calculations yet.</p>
           <span>
-            Vos 20 derniers résultats resteront
+            Your last 20 results will stay
             <br />
-            dans ce navigateur.
+            in this browser.
           </span>
         </div>
       )}
       {entries.length > 0 && (
         <div className="history-bottom">
-          <span>{entries.length} / 20 conservés</span>
+          <span>{entries.length} / 20 saved</span>
           <button className="text-button" onClick={onClear}>
-            Vider l’historique
+            Clear history
           </button>
         </div>
       )}
       {storageWarning && (
-        <p className="service-note">
-          Le navigateur ne permet pas d’enregistrer cet historique.
-        </p>
+        <p className="service-note">Your browser cannot save this history.</p>
       )}
     </section>
   );

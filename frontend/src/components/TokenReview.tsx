@@ -29,12 +29,12 @@ export function TokenReview({ tokens, onCorrect }: Props) {
     return (
       <div className="reading-empty">
         <span aria-hidden="true">—</span>
-        <p>Votre écriture apparaîtra ici, symbole par symbole.</p>
+        <p>Your handwriting will appear here, one symbol at a time.</p>
       </div>
     );
   return (
     <>
-      <div className="token-list" aria-label="Symboles reconnus">
+      <div className="token-list" aria-label="Recognized symbols">
         {tokens.map((token, index) => (
           <button
             key={index}
@@ -45,7 +45,7 @@ export function TokenReview({ tokens, onCorrect }: Props) {
             onClick={() => setSelected(selected === index ? null : index)}
             aria-expanded={selected === index}
             aria-controls="symbol-correction"
-            aria-label={`Corriger le symbole ${index + 1} : ${token.label}`}
+            aria-label={`Correct symbol ${index + 1}: ${token.label}`}
           >
             <span className="token-drawing">
               <img src={token.thumbnail} alt="" />
@@ -57,14 +57,14 @@ export function TokenReview({ tokens, onCorrect }: Props) {
               }
             >
               {token.corrected
-                ? "corrigé"
-                : `${Math.round(token.confidence * 100)} %`}
+                ? "edited"
+                : `${Math.round(token.confidence * 100)}%`}
             </span>
           </button>
         ))}
       </div>
       <p className="reading-hint">
-        Cliquez sur un symbole pour le corriger. Les scores restent indicatifs.
+        Click a symbol to correct it. Scores are estimates.
       </p>
       {active && selected !== null && (
         <div
@@ -72,7 +72,7 @@ export function TokenReview({ tokens, onCorrect }: Props) {
           className="symbol-correction"
           ref={choices}
           role="group"
-          aria-label={`Remplacer le symbole ${active.label}`}
+          aria-label={`Replace symbol ${active.label}`}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.stopPropagation();
@@ -82,12 +82,12 @@ export function TokenReview({ tokens, onCorrect }: Props) {
         >
           <div className="correction-heading">
             <p>
-              Remplacer <strong>{active.label}</strong> par
+              Replace <strong>{active.label}</strong> with
             </p>
             <button
               className="icon-button"
               onClick={close}
-              aria-label="Fermer la correction"
+              aria-label="Close symbol correction"
             >
               <X size={18} />
             </button>

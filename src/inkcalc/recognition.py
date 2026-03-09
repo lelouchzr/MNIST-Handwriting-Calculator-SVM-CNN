@@ -17,7 +17,7 @@ DISPLAY = {"*": "×", "/": "÷", "-": "−"}
 class Recognizer:
     def __init__(self, path: Path = MODEL_PATH):
         if not path.is_file():
-            raise FileNotFoundError("Modèle absent. Lancez : uv run python scripts/train.py")
+            raise FileNotFoundError("Model missing. Run: uv run python scripts/train.py")
         # Only load the repository's trusted artifact; never accept pickle uploads.
         bundle = joblib.load(path)
         self.model = bundle["model"]
@@ -45,7 +45,7 @@ class Recognizer:
             else:
                 groups.append({"strokes": [item["points"]], "box": box.copy()})
         if len(groups) > 64:
-            raise ValueError("Limitez l’expression à 64 symboles.")
+            raise ValueError("Limit the expression to 64 symbols.")
         predictions = []
         for group in groups:
             left, top, right, bottom = group["box"]

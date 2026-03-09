@@ -110,7 +110,7 @@ export function InkCanvas({ strokes, onChange }: Props) {
         ref={canvas}
         width={WIDTH}
         height={HEIGHT}
-        aria-label="Zone de dessin manuscrit"
+        aria-label="Handwriting canvas"
         onPointerDown={start}
         onPointerMove={move}
         onPointerUp={finish}
@@ -119,8 +119,8 @@ export function InkCanvas({ strokes, onChange }: Props) {
       />
       {!strokes.length && (
         <div className="paper-placeholder" aria-hidden="true">
-          <span>Écrivez ici.</span>
-          <p>ou chargez un exemple pour commencer</p>
+          <span>Write here.</span>
+          <p>or load an example to get started</p>
         </div>
       )}
       <span className="paper-mark" aria-hidden="true">
@@ -143,7 +143,7 @@ export function downloadInk(strokes: Stroke[]): void {
   context.fillRect(0, 0, canvas.width, canvas.height);
   for (const stroke of strokes) paint(context, stroke);
   const link = document.createElement("a");
-  link.download = "inkcalc-dessin.png";
+  link.download = "inkcalc-drawing.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 }

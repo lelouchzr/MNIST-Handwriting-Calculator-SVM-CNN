@@ -19,7 +19,7 @@ def test_calculation_api(client):
 def test_invalid_calculation_is_actionable(client):
     response = client.post("/api/calculate", json={"expression": "1/0"})
     assert response.status_code == 422
-    assert "zéro" in response.json()["detail"]
+    assert "zero" in response.json()["detail"]
 
 
 @pytest.mark.parametrize("strokes", [[], [[]], [[[-1, 2]]], [[[0, 1001]]], [[[1]]]])
@@ -29,7 +29,7 @@ def test_invalid_ink_is_rejected(client, strokes):
 
 def test_missing_model_keeps_calculator_available(client):
     app.state.recognizer = None
-    app.state.model_error = "Modèle absent."
+    app.state.model_error = "Model missing."
     assert client.get("/api/health").json()["recognition_ready"] is False
     assert (
         client.post("/api/recognize", json={"strokes": [[[20, 20], [20, 80]]]}).status_code == 503

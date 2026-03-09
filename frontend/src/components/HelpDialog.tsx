@@ -25,71 +25,69 @@ export function HelpDialog({
     >
       <div className="help-content">
         <div className="help-heading">
-          <span className="eyebrow">Mode d’emploi</span>
+          <span className="eyebrow">How to use</span>
           <button
             className="icon-button"
             onClick={() => dialog.current?.close()}
-            aria-label="Fermer l’aide"
+            aria-label="Close help"
             autoFocus
           >
             <X size={23} />
           </button>
         </div>
-        <h2 id="help-title">Du trait au résultat.</h2>
+        <h2 id="help-title">From ink to answer.</h2>
         <ol className="help-steps">
           <li>
             <span>01</span>
             <div>
-              <h3>Écrivez sur une ligne.</h3>
+              <h3>Write on one line.</h3>
               <p>
-                Espacez les symboles. Une souris, un doigt ou un stylet
-                suffisent. Dessinez × avec deux diagonales ; ÷ avec une barre et
-                deux points.
+                Leave a gap between symbols. Use a mouse, finger or stylus. Draw
+                × with two diagonals and ÷ with a bar and two dots.
               </p>
             </div>
           </li>
           <li>
             <span>02</span>
             <div>
-              <h3>Vérifiez la lecture.</h3>
+              <h3>Check the recognition.</h3>
               <p>
-                Après « Reconnaître », chaque symbole est modifiable. Les scores
-                sont des estimations du modèle, pas des garanties. Vous pouvez
-                aussi tout saisir au clavier.
+                After choosing Recognize, you can edit each symbol. Scores are
+                model estimates, not guarantees. You can also type the entire
+                expression.
               </p>
             </div>
           </li>
           <li>
             <span>03</span>
             <div>
-              <h3>Suivez le calcul.</h3>
+              <h3>Follow the calculation.</h3>
               <p>
-                Parenthèses, priorités, nombres négatifs et décimaux sont pris
-                en charge. La virgule est acceptée. Appuyez sur Entrée pour
-                calculer.
+                Parentheses, operator precedence, negative numbers and decimals
+                are supported. Decimal commas also work. Press Enter to
+                calculate.
               </p>
             </div>
           </li>
         </ol>
         <div className="help-shortcuts">
-          <h3>Raccourcis du brouillon</h3>
+          <h3>Drawing shortcuts</h3>
           <p>
-            <span>Annuler</span>
+            <span>Undo</span>
             <kbd>Ctrl / ⌘ Z</kbd>
           </p>
           <p>
-            <span>Rétablir</span>
+            <span>Redo</span>
             <kbd>Ctrl / ⌘ ⇧ Z</kbd>
           </p>
           <p>
-            <span>Fermer cette fenêtre</span>
-            <kbd>Échap</kbd>
+            <span>Close this window</span>
+            <kbd>Esc</kbd>
           </p>
         </div>
         <p className="help-privacy">
-          Dans la configuration locale, les dessins sont traités sur votre
-          ordinateur. Seul l’historique des calculs est conservé dans ce
-          navigateur.
+          In the local setup, drawings are processed on your computer. Only your
+          calculation history is saved in this browser.
         </p>
       </div>
     </dialog>

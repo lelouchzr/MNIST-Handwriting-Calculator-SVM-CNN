@@ -27,9 +27,9 @@ def calculate(expression: str) -> Calculation:
         str.maketrans({"×": "*", "÷": "/", "−": "-", ",": "."})
     )
     if not normalized or len(normalized) > 256:
-        raise ExpressionError("Écrivez une expression de 1 à 256 caractères.")
+        raise ExpressionError("Enter an expression between 1 and 256 characters.")
     if any(char not in "0123456789.+-*/() \t" for char in normalized):
-        raise ExpressionError("Utilisez uniquement des nombres, +, −, ×, ÷ et des parenthèses.")
+        raise ExpressionError("Use only numbers, +, −, ×, ÷ and parentheses.")
 
     # Handwritten numbers may contain leading zeroes, which Python's parser rejects.
     def canonical_number(match: re.Match) -> str:
@@ -41,15 +41,15 @@ def calculate(expression: str) -> Calculation:
         tree = ast.parse(normalized, mode="eval")
     except (SyntaxError, ValueError, RecursionError) as exc:
         raise ExpressionError(
-            "L’expression est incomplète ou les parenthèses sont mal placées."
+            "The expression is incomplete or the parentheses are misplaced."
         ) from exc
     if sum(1 for _ in ast.walk(tree)) > 96:
-        raise ExpressionError("L’expression contient trop d’opérations.")
+        raise ExpressionError("The expression contains too many operations.")
     steps: list[str] = []
 
     def visit(node: ast.AST, depth: int = 0) -> Decimal:
         if depth > 24:
-            raise ExpressionError("L’expression contient trop de niveaux de parenthèses.")
+            raise ExpressionError("The expression is nested too deeply.")
         if isinstance(node, ast.Constant) and type(node.value) in (int, float):
             value = Decimal(ast.get_source_segment(normalized, node) or "0")
         elif isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
@@ -65,15 +65,15 @@ def calculate(expression: str) -> Calculation:
                 value, symbol = left * right, "×"
             else:
                 if right == 0:
-                    raise ExpressionError("La division par zéro n’est pas définie.")
+                    raise ExpressionError("Division by zero is undefined.")
                 value, symbol = left / right, "÷"
             steps.append(
                 f"{format_number(left)} {symbol} {format_number(right)} = {format_number(value)}"
             )
         else:
-            raise ExpressionError("Cette opération n’est pas prise en charge.")
+            raise ExpressionError("This operation is not supported.")
         if not value.is_finite() or abs(value) > Decimal("1e15"):
-            raise ExpressionError("Le résultat dépasse la limite de 10¹⁵.")
+            raise ExpressionError("The result exceeds the limit of 10¹⁵.")
         return value
 
     try:
@@ -81,5 +81,5 @@ def calculate(expression: str) -> Calculation:
             context.prec = 40
             value = visit(tree.body)
     except (DecimalException, OverflowError) as exc:
-        raise ExpressionError("Ce calcul dépasse les limites numériques.") from exc
+        raise ExpressionError("This calculation exceeds the numerical limits.") from exc
     return Calculation(normalized, format_number(value), steps)

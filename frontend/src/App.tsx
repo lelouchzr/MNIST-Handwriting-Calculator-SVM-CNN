@@ -86,22 +86,22 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <a href="#brouillon" className="skip-link">
-        Aller au calcul
+      <a href="#workspace" className="skip-link">
+        Skip to calculator
       </a>
       <header className="site-header">
-        <a className="brand" href="#brouillon" aria-label="InkCalc, accueil">
+        <a className="brand" href="#workspace" aria-label="InkCalc home">
           inkcalc<span aria-hidden="true">/</span>
         </a>
-        <nav className="main-nav" aria-label="Navigation principale">
-          <a className="active" href="#brouillon" aria-current="page">
-            Brouillon
+        <nav className="main-nav" aria-label="Main navigation">
+          <a className="active" href="#workspace" aria-current="page">
+            Workspace
           </a>
-          <button onClick={revealHistory}>Historique</button>
+          <button onClick={revealHistory}>History</button>
         </nav>
         <div className="header-utilities">
           <button className="help-trigger" onClick={() => setHelpOpen(true)}>
-            Aide
+            Help
             <span className="shortcut" aria-hidden="true">
               ?
             </span>
@@ -112,48 +112,48 @@ export default function App() {
             href="https://github.com/lelouchzr/inkcalc"
             target="_blank"
             rel="noreferrer"
-            aria-label="Voir le projet InkCalc sur GitHub"
+            aria-label="View InkCalc on GitHub"
           >
             <GithubLogo size={25} weight="fill" />
           </a>
         </div>
       </header>
-      <main id="brouillon" tabIndex={-1}>
+      <main id="workspace" tabIndex={-1}>
         <div className="page-heading">
           <div>
-            <p className="eyebrow">Calcul manuscrit</p>
-            <h1>À main levée.</h1>
+            <p className="eyebrow">Handwritten math</p>
+            <h1>By hand.</h1>
           </div>
-          <p className="page-caption">Écrivez. Vérifiez. Calculez.</p>
+          <p className="page-caption">Write. Check. Calculate.</p>
         </div>
         <div className="workspace-layout">
           <div className="drawing-column">
             <section
               className="drawing-surface"
-              aria-label="Brouillon manuscrit"
+              aria-label="Handwriting canvas"
               ref={drawing}
             >
               <div
                 className="drawing-toolbar"
                 role="toolbar"
-                aria-label="Outils du dessin"
+                aria-label="Drawing tools"
               >
                 <span className="pen-label">
                   <PencilSimple size={23} weight="regular" />
-                  Stylo
+                  Pen
                 </span>
                 <span
                   className="ink-swatch"
-                  title="Encre noire"
-                  aria-label="Encre noire"
+                  title="Black ink"
+                  aria-label="Black ink"
                 />
                 <span className="toolbar-divider" />
                 <button
                   className="icon-button"
                   disabled={!ink.past.length}
                   onClick={workspace.undo}
-                  title="Annuler (Ctrl ou Cmd + Z)"
-                  aria-label="Annuler le dernier trait"
+                  title="Undo (Ctrl or Cmd + Z)"
+                  aria-label="Undo the last drawing action"
                 >
                   <ArrowCounterClockwise size={22} />
                 </button>
@@ -161,8 +161,8 @@ export default function App() {
                   className="icon-button"
                   disabled={!ink.future.length}
                   onClick={workspace.redo}
-                  title="Rétablir (Ctrl ou Cmd + Maj + Z)"
-                  aria-label="Rétablir le dernier trait"
+                  title="Redo (Ctrl or Cmd + Shift + Z)"
+                  aria-label="Redo the last drawing action"
                 >
                   <ArrowClockwise size={22} />
                 </button>
@@ -171,8 +171,8 @@ export default function App() {
                   className="icon-button"
                   disabled={!ink.strokes.length}
                   onClick={() => downloadInk(ink.strokes)}
-                  title="Exporter le dessin en PNG"
-                  aria-label="Exporter le dessin"
+                  title="Export drawing as PNG"
+                  aria-label="Export drawing"
                 >
                   <DownloadSimple size={22} />
                 </button>
@@ -180,36 +180,36 @@ export default function App() {
                   className="clear-button"
                   disabled={!ink.strokes.length && !expression}
                   onClick={() => workspace.changeInk([])}
-                  title="Effacer le brouillon"
-                  aria-label="Effacer le brouillon"
+                  title="Clear drawing"
+                  aria-label="Clear drawing"
                 >
                   <Trash size={20} />
-                  <span>Effacer</span>
+                  <span>Clear</span>
                 </button>
               </div>
               <InkCanvas strokes={ink.strokes} onChange={workspace.changeInk} />
               <div className="canvas-caption">
                 <span className="desktop-tip">
-                  Une ligne. Un espace entre chaque symbole.
+                  One line. Leave a gap between symbols.
                 </span>
-                <span className="mobile-tip">Espacez les symboles.</span>
+                <span className="mobile-tip">Space out your symbols.</span>
                 <span className="stroke-count">
                   {ink.strokes.length}{" "}
-                  {ink.strokes.length === 1 ? "trait" : "traits"}
+                  {ink.strokes.length === 1 ? "stroke" : "strokes"}
                 </span>
               </div>
               <div className="drawing-actions">
                 <button className="example-button" onClick={loadExample}>
-                  <span className="desktop-tip">Charger un exemple</span>
-                  <span className="mobile-tip">Exemple</span>
+                  <span className="desktop-tip">Load an example</span>
+                  <span className="mobile-tip">Example</span>
                 </button>
                 <button
                   className="recognize-button"
                   disabled={!ink.strokes.length || busy !== null}
                   onClick={workspace.recognize}
-                  aria-label="Reconnaître l’écriture"
+                  aria-label="Recognize handwriting"
                 >
-                  {busy === "recognize" ? "Lecture…" : "Reconnaître"}
+                  {busy === "recognize" ? "Reading…" : "Recognize"}
                   <ArrowRight size={23} />
                 </button>
               </div>
@@ -219,11 +219,11 @@ export default function App() {
               aria-labelledby="reading-title"
             >
               <div className="section-heading">
-                <h2 id="reading-title">Lecture</h2>
+                <h2 id="reading-title">Recognition</h2>
                 <span>
                   {tokens.length
-                    ? `${tokens.length} symboles`
-                    : "Vérifiez avant de calculer"}
+                    ? `${tokens.length} ${tokens.length === 1 ? "symbol" : "symbols"}`
+                    : "Check before calculating"}
                 </span>
               </div>
               <TokenReview tokens={tokens} onCorrect={workspace.correct} />
@@ -239,9 +239,9 @@ export default function App() {
                   <input
                     id="expression"
                     ref={input}
-                    aria-label="Expression reconnue ou saisie au clavier"
+                    aria-label="Recognized or typed expression"
                     value={expression}
-                    placeholder="Ex. (12 + 7) × 2"
+                    placeholder="e.g. (12 + 7) × 2"
                     maxLength={256}
                     autoComplete="off"
                     spellCheck={false}
@@ -253,24 +253,26 @@ export default function App() {
                     className="calculate-button"
                     type="submit"
                     disabled={!expression.trim() || busy !== null}
-                    aria-label="Calculer"
+                    aria-label="Calculate"
                   >
-                    <span>{busy === "calculate" ? "Calcul…" : "Calculer"}</span>
+                    <span>
+                      {busy === "calculate" ? "Calculating…" : "Calculate"}
+                    </span>
                     <ArrowRight size={23} />
                   </button>
                 </div>
-                <div className="operator-row" aria-label="Insérer un opérateur">
+                <div className="operator-row" aria-label="Insert an operator">
                   {operators.map((symbol) => (
                     <button
                       key={symbol}
                       type="button"
                       onClick={() => append(symbol)}
-                      aria-label={`Insérer ${symbol}`}
+                      aria-label={`Insert ${symbol}`}
                     >
                       {symbol}
                     </button>
                   ))}
-                  <span>Modifiable au clavier.</span>
+                  <span>Editable with your keyboard.</span>
                 </div>
               </form>
               {workspace.error && (
@@ -281,13 +283,13 @@ export default function App() {
               )}
               {workspace.health && !workspace.health.recognition_ready && (
                 <p className="service-note">
-                  La reconnaissance est indisponible. Vous pouvez saisir votre
-                  expression au clavier.
+                  Recognition is unavailable. You can still type your
+                  expression.
                 </p>
               )}
             </section>
           </div>
-          <aside className="result-column" aria-label="Résultat et historique">
+          <aside className="result-column" aria-label="Result and history">
             <ResultPanel
               calculation={workspace.calculation}
               busy={busy === "calculate"}
@@ -307,8 +309,9 @@ export default function App() {
             >
               <span aria-hidden="true">i</span>
               <p>
-                Un doute sur un symbole ?<br />
-                <span>Cliquez dessus pour le corriger.</span>
+                Unsure about a symbol?
+                <br />
+                <span>Click it to correct it.</span>
               </p>
             </button>
           </aside>
@@ -316,10 +319,10 @@ export default function App() {
       </main>
       <footer className="site-footer">
         <span>
-          Calcul local <span aria-hidden="true">·</span> Aucun dessin conservé
+          Calculated locally <span aria-hidden="true">·</span> No drawings saved
         </span>
         <span className="footer-keyboard">
-          <kbd>↵</kbd> Entrée pour calculer
+          <kbd>↵</kbd> Press Enter to calculate
         </span>
       </footer>
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />

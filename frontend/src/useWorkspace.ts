@@ -9,12 +9,12 @@ type Health = { recognition_ready: boolean; model_error: string | null };
 function errorMessage(cause: unknown): string {
   if (cause instanceof Error) {
     if (cause.name === "TimeoutError")
-      return "Le service met trop de temps à répondre. Réessayez.";
+      return "The service took too long to respond. Please try again.";
     if (cause instanceof TypeError)
-      return "Le service de calcul est injoignable. Vérifiez qu’il est démarré.";
+      return "The calculation service is unreachable. Make sure it is running.";
     return cause.message;
   }
-  return "Une erreur est survenue. Réessayez.";
+  return "Something went wrong. Please try again.";
 }
 
 export function useWorkspace() {

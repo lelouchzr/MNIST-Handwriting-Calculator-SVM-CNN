@@ -15,7 +15,7 @@ export async function request<T>(
     throw new Error(
       typeof data.detail === "string"
         ? data.detail
-        : "Ce dessin est trop complexe. Réessayez avec moins de traits.",
+        : "This drawing is too complex. Try again with fewer strokes.",
     );
   }
   return data as T;
