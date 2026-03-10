@@ -31,6 +31,10 @@ class ExpressionRequest(BaseModel):
     expression: str = Field(min_length=1, max_length=256)
 
 
+class ExplanationRequest(InkRequest):
+    symbol_index: int = Field(ge=0, le=63, strict=True)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.recognizer = None
@@ -75,6 +79,16 @@ def recognize(request: InkRequest):
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"tokens": tokens, "expression": "".join(token["label"] for token in tokens)}
+
+
+@app.post("/api/explain")
+def explain(request: ExplanationRequest):
+    if app.state.recognizer is None:
+        raise HTTPException(status_code=503, detail="The recognition model is unavailable.")
+    try:
+        return app.state.recognizer.explain(request.strokes, request.symbol_index)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 build = Path(__file__).resolve().parents[2] / "frontend" / "dist"

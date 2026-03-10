@@ -35,3 +35,29 @@ def test_missing_model_keeps_calculator_available(client):
         client.post("/api/recognize", json={"strokes": [[[20, 20], [20, 80]]]}).status_code == 503
     )
     assert client.post("/api/calculate", json={"expression": "2+2"}).json()["result"] == "4"
+    assert (
+        client.post("/api/explain", json={"strokes": [[[20, 20]]], "symbol_index": 0}).status_code
+        == 503
+    )
+
+
+def test_explanation_api(client):
+    response = client.post(
+        "/api/explain",
+        json={
+            "strokes": [[[20, 50], [90, 50]], [[55, 20], [55, 80]]],
+            "symbol_index": 0,
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["label"] == "+"
+    assert data["windows"] == 576
+    assert len(data["sensitivity"]) == 28
+    assert all(len(row) == 28 for row in data["sensitivity"])
+
+
+@pytest.mark.parametrize("index", [-1, 1, 64, 0.5, True])
+def test_invalid_explanation_selection_is_rejected(client, index):
+    response = client.post("/api/explain", json={"strokes": [[[20, 20]]], "symbol_index": index})
+    assert response.status_code == 422

@@ -27,8 +27,13 @@ def normalize(image: Image.Image) -> np.ndarray:
 
 
 def features(image: Image.Image) -> np.ndarray:
+    return features_from_pixels(normalize(image))
+
+
+def features_from_pixels(pixels: np.ndarray) -> np.ndarray:
+    """Extract HOG without recropping or recentering an already normalized input."""
     return hog(
-        normalize(image),
+        pixels,
         orientations=9,
         pixels_per_cell=(7, 7),
         cells_per_block=(2, 2),
