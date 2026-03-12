@@ -15,6 +15,7 @@ dependencies = [
   "scikit-learn>=1.6,<2",
   "scikit-image>=0.25,<1",
   "joblib>=1.4,<2",
+  "torch>=2.15,<3",
 ]
 
 [dependency-groups]
@@ -22,6 +23,11 @@ dev = ["pytest>=8,<10", "httpx>=0.28,<1", "ruff>=0.11,<1"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/inkcalc"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -33,3 +39,6 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
