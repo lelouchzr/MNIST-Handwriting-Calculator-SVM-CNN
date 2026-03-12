@@ -6,7 +6,7 @@ prediction, correct ambiguous symbols, and calculate without running arbitrary c
 Python handles image preparation, classification and arithmetic. React handles the
 canvas, editable predictions and browser-local calculation history.
 
-![InkCalc handwriting workspace](docs/workspace.jpg)
+![InkCalc recognition inspector](docs/inspector-explanation.jpg)
 
 ## Development
 
@@ -35,6 +35,9 @@ drawings are not persisted. No external OCR or hosted AI service is called.
 
 - Draw with a mouse, finger or pen; undo/redo drawing actions and export as PNG.
 - Recognize digits and + − × ÷ ( ), with symbol previews and alternative predictions.
+- Inspect each detected region: original crop, normalized 28 × 28 pixels, all 16
+  class probabilities, and a signed occlusion sensitivity map.
+- Select numbered regions on the drawing, or hide Segments to draw over them.
 - Correct a prediction or type an expression directly; decimal commas are accepted.
 - Evaluate parentheses, operator precedence and negative numbers with visible steps.
 - Keep the latest 20 calculations locally, with a clear-history action.
@@ -49,6 +52,26 @@ Keyboard shortcuts: Ctrl/⌘ Z to undo, Ctrl/⌘ Shift Z to redo, Enter in the e
 field to calculate, and `?` outside editable fields to open help. Escape closes help
 or the symbol correction controls. History entries can be reopened without creating
 a duplicate calculation.
+
+## Inspect recognition
+
+Recognize a drawing, then choose **Inspect** or click a numbered detection box.
+Use the Symbol selector to switch between detected characters.
+
+- **Input** shows the raster crop, its dimensions, and the normalized 28 × 28 input.
+- **Predictions** shows all 16 calibrated class probabilities in descending order.
+- **Explanation** calculates sensitivity on demand using 576 overlapping 5 × 5
+  zero masks. Yellow means masking lowered the original prediction score; hatching
+  means it raised the score. Values use percentage points and colors are scaled
+  independently for each symbol.
+
+Manual expression corrections do not rewrite the original model prediction or its
+explanation. Tiny decimal marks use a size rule and have no classifier probabilities
+or sensitivity map. Explanations are cached only in the open inspector's memory;
+closing it or changing the drawing discards that cache. Drawings are not persisted.
+
+The tabs support arrow keys, Home and End. Escape closes the inspector. A failed
+explanation request can be retried without redrawing.
 
 Recognition is imperfect: leave space between symbols, write on one line, and check
 the predictions before calculating. MNIST test-digit accuracy is **95.65% on 2,000

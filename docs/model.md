@@ -58,6 +58,32 @@ metrics, and needs network access. The committed artifact allows normal app star
 without any download. Only load the trusted model from this repository: joblib/pickle
 artifacts can execute code and must never be accepted as uploads.
 
+## Recognition inspection and occlusion sensitivity
+
+`POST /api/recognize` includes the original prediction, all 16 class probabilities,
+the raster crop and a PNG preview of its normalized 28 × 28 input. Manual edits
+affect the expression label only. Small marks use the existing geometric decimal
+rule; they explicitly expose no classifier probabilities or model explanation.
+
+`POST /api/explain` accepts the bounded stroke request plus a zero-based
+`symbol_index`. It segments the submitted drawing again and explains that symbol's
+original top-scoring class. No client-supplied label selects the explanation target.
+
+The normalized floating-point image stays fixed. Each 5 × 5 window is set to zero,
+HOG is recomputed without recropping or recentering, and the calibrated classifier
+predicts all 576 perturbed samples in one batch. For class c, each window's change is
+`p(c | original) - p(c | masked)`. The displayed value at a pixel is the average of
+the changes for all overlapping windows that contain it, including border windows.
+The sign is preserved. A zero-effect map stays zero without normalization errors.
+
+The UI scales color magnitude per symbol, labels values in percentage points, and
+uses both color and hatching to distinguish the sign. This is a local perturbation
+sensitivity measure, not a causal attribution or a guarantee of model correctness.
+Masking can create inputs outside the training distribution. Display PNGs quantize
+the input to eight bits; inference and masking retain the normalized float values.
+The HOG feature refactor preserves the original recognition/training transform;
+the committed model does not need retraining.
+
 ## Known limitations
 
 - Leave space between symbols. Overlapping x-ranges can merge unrelated symbols.
