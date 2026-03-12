@@ -76,7 +76,8 @@ export function useWorkspace() {
       const target = event.target;
       if (
         target instanceof HTMLElement &&
-        (target.closest("input, textarea, dialog") || target.isContentEditable)
+        (target.closest("input, textarea, select, dialog") ||
+          target.isContentEditable)
       )
         return;
       if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
@@ -183,5 +184,6 @@ export function useWorkspace() {
     correct,
     restore,
     clearHistory: () => setHistory([]),
+    beginStroke: resetReading,
   };
 }

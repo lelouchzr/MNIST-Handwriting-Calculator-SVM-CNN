@@ -54,7 +54,9 @@ export function HelpDialog({
               <p>
                 After choosing Recognize, you can edit each symbol. Scores are
                 model estimates, not guarantees. You can also type the entire
-                expression.
+                expression. Use Inspect or select a numbered box to see the
+                input pixels, all class scores and a masking sensitivity map.
+                Turn off Segments to draw over a detected box.
               </p>
             </div>
           </li>

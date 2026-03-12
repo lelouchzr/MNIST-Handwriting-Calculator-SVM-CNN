@@ -8,12 +8,14 @@ import {
   GithubLogo,
   PencilSimple,
   WarningCircle,
+  MagnifyingGlass,
 } from "@phosphor-icons/react";
 import { InkCanvas, downloadInk } from "./InkCanvas";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { HelpDialog } from "./components/HelpDialog";
 import { ResultPanel } from "./components/ResultPanel";
 import { TokenReview } from "./components/TokenReview";
+import { RecognitionInspector } from "./components/RecognitionInspector";
 import { sampleExpression } from "./samples";
 import { useWorkspace } from "./useWorkspace";
 
@@ -23,17 +25,40 @@ export default function App() {
   const workspace = useWorkspace();
   const [helpOpen, setHelpOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [inspected, setInspected] = useState<number | null>(null);
+  const [showSegmentation, setShowSegmentation] = useState(true);
+  const inspectButton = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const history = useRef<HTMLElement>(null);
   const drawing = useRef<HTMLElement>(null);
   const { ink, expression, tokens, busy } = workspace;
 
   useEffect(() => {
+    if (!tokens.length) setInspected(null);
+    else if (inspected !== null && inspected >= tokens.length) setInspected(0);
+  }, [tokens, inspected]);
+
+  function openInspector(index: number) {
+    setInspected(index);
+    requestAnimationFrame(() => {
+      const panel = document.getElementById("recognition-inspector");
+      panel?.scrollIntoView({ block: "nearest" });
+      panel?.focus({ preventScroll: true });
+    });
+  }
+
+  function closeInspector() {
+    setInspected(null);
+    inspectButton.current?.focus({ preventScroll: true });
+  }
+
+  useEffect(() => {
     const onHelpKey = (event: KeyboardEvent) => {
       const target = event.target;
       if (
         target instanceof HTMLElement &&
-        (target.closest("input, textarea, dialog") || target.isContentEditable)
+        (target.closest("input, textarea, select, dialog") ||
+          target.isContentEditable)
       )
         return;
       if (
@@ -187,12 +212,32 @@ export default function App() {
                   <span>Clear</span>
                 </button>
               </div>
-              <InkCanvas strokes={ink.strokes} onChange={workspace.changeInk} />
+              <InkCanvas
+                strokes={ink.strokes}
+                onChange={workspace.changeInk}
+                onDrawStart={workspace.beginStroke}
+                tokens={tokens}
+                selectedIndex={inspected}
+                showSegmentation={showSegmentation}
+                onInspect={openInspector}
+              />
               <div className="canvas-caption">
                 <span className="desktop-tip">
                   One line. Leave a gap between symbols.
                 </span>
                 <span className="mobile-tip">Space out your symbols.</span>
+                {tokens.length > 0 && (
+                  <label className="segmentation-toggle">
+                    <input
+                      type="checkbox"
+                      checked={showSegmentation}
+                      onChange={(event) =>
+                        setShowSegmentation(event.target.checked)
+                      }
+                    />
+                    Segments
+                  </label>
+                )}
                 <span className="stroke-count">
                   {ink.strokes.length}{" "}
                   {ink.strokes.length === 1 ? "stroke" : "strokes"}
@@ -220,13 +265,35 @@ export default function App() {
             >
               <div className="section-heading">
                 <h2 id="reading-title">Recognition</h2>
-                <span>
-                  {tokens.length
-                    ? `${tokens.length} ${tokens.length === 1 ? "symbol" : "symbols"}`
-                    : "Check before calculating"}
-                </span>
+                <div className="recognition-actions">
+                  <span>
+                    {tokens.length
+                      ? `${tokens.length} ${tokens.length === 1 ? "symbol" : "symbols"}`
+                      : "Check before calculating"}
+                  </span>
+                  <button
+                    className="inspect-trigger"
+                    ref={inspectButton}
+                    disabled={!tokens.length}
+                    onClick={() => openInspector(inspected ?? 0)}
+                    aria-expanded={inspected !== null}
+                    aria-controls="recognition-inspector"
+                    title={
+                      tokens.length
+                        ? "Inspect recognition details"
+                        : "Recognize handwriting to inspect its symbols"
+                    }
+                  >
+                    <MagnifyingGlass size={17} />
+                    Inspect
+                  </button>
+                </div>
               </div>
-              <TokenReview tokens={tokens} onCorrect={workspace.correct} />
+              <TokenReview
+                tokens={tokens}
+                onCorrect={workspace.correct}
+                inspectedIndex={inspected}
+              />
               <form
                 className="expression-form"
                 onSubmit={(event) => {
@@ -290,6 +357,15 @@ export default function App() {
             </section>
           </div>
           <aside className="result-column" aria-label="Result and history">
+            {inspected !== null && tokens[inspected] && (
+              <RecognitionInspector
+                tokens={tokens}
+                index={inspected}
+                strokes={ink.strokes}
+                onSelect={setInspected}
+                onClose={closeInspector}
+              />
+            )}
             <ResultPanel
               calculation={workspace.calculation}
               busy={busy === "calculate"}

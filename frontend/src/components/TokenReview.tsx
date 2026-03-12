@@ -5,9 +5,10 @@ import type { Token } from "../types";
 type Props = {
   tokens: Token[];
   onCorrect: (index: number, label: string) => void;
+  inspectedIndex: number | null;
 };
 
-export function TokenReview({ tokens, onCorrect }: Props) {
+export function TokenReview({ tokens, onCorrect, inspectedIndex }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const choices = useRef<HTMLDivElement>(null);
@@ -41,7 +42,7 @@ export function TokenReview({ tokens, onCorrect }: Props) {
             ref={(element) => {
               buttons.current[index] = element;
             }}
-            className={`token ${selected === index ? "is-selected" : ""}`}
+            className={`token ${selected === index ? "is-selected" : ""} ${inspectedIndex === index ? "is-inspected" : ""}`}
             onClick={() => setSelected(selected === index ? null : index)}
             aria-expanded={selected === index}
             aria-controls="symbol-correction"
@@ -58,7 +59,9 @@ export function TokenReview({ tokens, onCorrect }: Props) {
             >
               {token.corrected
                 ? "edited"
-                : `${Math.round(token.confidence * 100)}%`}
+                : token.method === "geometry"
+                  ? "size rule"
+                  : `${Math.round(token.confidence * 100)}%`}
             </span>
           </button>
         ))}

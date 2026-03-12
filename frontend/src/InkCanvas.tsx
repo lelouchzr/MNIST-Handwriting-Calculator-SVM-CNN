@@ -1,8 +1,16 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PointerEvent } from "react";
-import type { Point, Stroke } from "./types";
+import type { Point, Stroke, Token } from "./types";
 
-type Props = { strokes: Stroke[]; onChange: (strokes: Stroke[]) => void };
+type Props = {
+  strokes: Stroke[];
+  onChange: (strokes: Stroke[]) => void;
+  onDrawStart: () => void;
+  tokens: Token[];
+  selectedIndex: number | null;
+  showSegmentation: boolean;
+  onInspect: (index: number) => void;
+};
 export const WIDTH = 1000;
 export const HEIGHT = 360;
 
@@ -24,7 +32,17 @@ function paint(context: CanvasRenderingContext2D, stroke: Stroke) {
   }
 }
 
-export function InkCanvas({ strokes, onChange }: Props) {
+export function InkCanvas({
+  strokes,
+  onChange,
+  onDrawStart,
+  tokens,
+  selectedIndex,
+  showSegmentation,
+  onInspect,
+}: Props) {
+  const [logicalHeight, setLogicalHeight] = useState(HEIGHT);
+  const [pixelScale, setPixelScale] = useState(1);
   const canvas = useRef<HTMLCanvasElement>(null);
   const current = useRef<Stroke>([]);
   const pointer = useRef<number | null>(null);
@@ -40,6 +58,8 @@ export function InkCanvas({ strokes, onChange }: Props) {
       element.height = Math.round(
         (WIDTH * rect.height) / Math.max(1, rect.width),
       );
+      setLogicalHeight(element.height);
+      setPixelScale(rect.width / WIDTH);
       const context = element.getContext("2d");
       if (!context) return;
       for (const stroke of strokesRef.current) paint(context, stroke);
@@ -76,6 +96,7 @@ export function InkCanvas({ strokes, onChange }: Props) {
     if (pointer.current !== null || event.button !== 0) return;
     if (strokesRef.current.length >= 256) return;
     pointer.current = event.pointerId;
+    onDrawStart();
     event.currentTarget.setPointerCapture(event.pointerId);
     current.current = [point(event)];
     const context = canvas.current?.getContext("2d");
@@ -121,6 +142,38 @@ export function InkCanvas({ strokes, onChange }: Props) {
         <div className="paper-placeholder" aria-hidden="true">
           <span>Write here.</span>
           <p>or load an example to get started</p>
+        </div>
+      )}
+      {showSegmentation && tokens.length > 0 && (
+        <div
+          className="segmentation-layer"
+          aria-label="Detected symbol regions"
+        >
+          {tokens.map((token, index) => {
+            const [left, top, right, bottom] = token.box;
+            if (top > logicalHeight) return null;
+            const x = Math.max(0, left - 8);
+            const y = Math.max(0, top - 8);
+            return (
+              <button
+                key={index}
+                className={`segment-button ${index === selectedIndex ? "is-selected" : ""} ${y * pixelScale < 22 ? "near-top" : ""}`}
+                style={{
+                  left: `${(x / WIDTH) * 100}%`,
+                  top: `${(y / logicalHeight) * 100}%`,
+                  width: `${(Math.max(16, Math.min(WIDTH, right + 8) - x) / WIDTH) * 100}%`,
+                  height: `${(Math.max(16, Math.min(logicalHeight, bottom + 8) - y) / logicalHeight) * 100}%`,
+                }}
+                aria-label={`Inspect symbol ${index + 1}: ${token.label}`}
+                aria-pressed={index === selectedIndex}
+                onClick={() => onInspect(index)}
+              >
+                <span>
+                  {index + 1} · {token.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
       <span className="paper-mark" aria-hidden="true">
