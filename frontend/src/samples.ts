@@ -1,4 +1,5 @@
 import type { Point, Stroke } from "./types";
+import challenge from "./challenge.json";
 
 // Original pen paths: useful both as a demo and a repeatable recognition smoke test.
 const glyphs: Record<string, Stroke[]> = {
@@ -56,5 +57,17 @@ export function sampleExpression(logicalHeight = 360): Stroke[] {
         y * 1.65 + top,
       ]),
     ),
+  );
+}
+
+// An original synthetic pen example selected to explore disagreement, not to benchmark accuracy.
+export function challengingDigit(logicalHeight = 360): Stroke[] {
+  const points = challenge.flat();
+  const xs = points.map((point) => point[0]);
+  const ys = points.map((point) => point[1]);
+  const dx = 500 - (Math.min(...xs) + Math.max(...xs)) / 2;
+  const dy = logicalHeight / 2 - (Math.min(...ys) + Math.max(...ys)) / 2;
+  return challenge.map((stroke) =>
+    stroke.map(([x, y]): Point => [x + dx, y + dy]),
   );
 }

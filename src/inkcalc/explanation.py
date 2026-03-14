@@ -7,15 +7,16 @@ from inkcalc.features import features_from_pixels
 PATCH_SIZE = 5
 
 
-def occlusion_sensitivity(pixels: np.ndarray, model, target: int) -> dict:
-    baseline = float(model.predict_proba([features_from_pixels(pixels)])[0, target])
+def occlusion_sensitivity(pixels: np.ndarray, model, target: int, feature_fn=None) -> dict:
+    feature_fn = feature_fn or features_from_pixels
+    baseline = float(model.predict_proba([feature_fn(pixels)])[0, target])
     masked_features = []
     positions = []
     for row in range(28 - PATCH_SIZE + 1):
         for column in range(28 - PATCH_SIZE + 1):
             masked = pixels.copy()
             masked[row : row + PATCH_SIZE, column : column + PATCH_SIZE] = 0
-            masked_features.append(features_from_pixels(masked))
+            masked_features.append(feature_fn(masked))
             positions.append((row, column))
 
     # One batched prediction; each perturbed image retains the same coordinates.

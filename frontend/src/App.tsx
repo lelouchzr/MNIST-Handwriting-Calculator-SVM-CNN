@@ -16,7 +16,8 @@ import { HelpDialog } from "./components/HelpDialog";
 import { ResultPanel } from "./components/ResultPanel";
 import { TokenReview } from "./components/TokenReview";
 import { RecognitionInspector } from "./components/RecognitionInspector";
-import { sampleExpression } from "./samples";
+import { ModelComparison } from "./components/ModelComparison";
+import { sampleExpression, challengingDigit } from "./samples";
 import { useWorkspace } from "./useWorkspace";
 
 const operators = ["+", "−", "×", "÷", "(", ")", "."];
@@ -81,6 +82,15 @@ export default function App() {
       ?.getBoundingClientRect();
     workspace.changeInk(
       sampleExpression(bounds ? (1000 * bounds.height) / bounds.width : 360),
+    );
+  }
+
+  function loadChallenge() {
+    const bounds = drawing.current
+      ?.querySelector("canvas")
+      ?.getBoundingClientRect();
+    workspace.changeInk(
+      challengingDigit(bounds ? (1000 * bounds.height) / bounds.width : 360),
     );
   }
 
@@ -150,6 +160,43 @@ export default function App() {
             <h1>By hand.</h1>
           </div>
           <p className="page-caption">Write. Check. Calculate.</p>
+        </div>
+        <div className="model-controls">
+          <fieldset className="model-switch">
+            <legend>Recognition model</legend>
+            {(["svm", "cnn", "compare"] as const).map((mode) => (
+              <label key={mode}>
+                <input
+                  type="radio"
+                  name="recognition-model"
+                  value={mode}
+                  checked={workspace.mode === mode}
+                  onChange={() => workspace.changeMode(mode)}
+                  disabled={
+                    mode === "compare"
+                      ? workspace.health?.models.svm?.ready === false ||
+                        workspace.health?.models.cnn?.ready === false
+                      : workspace.health?.models[mode]?.ready === false
+                  }
+                />
+                <span>
+                  {mode === "compare" ? "Compare" : mode.toUpperCase()}
+                </span>
+              </label>
+            ))}
+          </fieldset>
+          <p>
+            {workspace.mode === "compare"
+              ? "One drawing. Both models. Inspect agreements and differences."
+              : workspace.mode === "cnn"
+                ? "CNN · uncalibrated softmax scores"
+                : "HOG + SVM · calibrated probabilities"}
+            {workspace.mode === "compare" && (
+              <button className="challenge-button" onClick={loadChallenge}>
+                Load synthetic challenge
+              </button>
+            )}
+          </p>
         </div>
         <div className="workspace-layout">
           <div className="drawing-column">
@@ -357,15 +404,17 @@ export default function App() {
             </section>
           </div>
           <aside className="result-column" aria-label="Result and history">
-            {inspected !== null && tokens[inspected] && (
-              <RecognitionInspector
-                tokens={tokens}
-                index={inspected}
-                strokes={ink.strokes}
-                onSelect={setInspected}
-                onClose={closeInspector}
-              />
-            )}
+            {workspace.mode !== "compare" &&
+              inspected !== null &&
+              tokens[inspected] && (
+                <RecognitionInspector
+                  tokens={tokens}
+                  index={inspected}
+                  strokes={ink.strokes}
+                  onSelect={setInspected}
+                  onClose={closeInspector}
+                />
+              )}
             <ResultPanel
               calculation={workspace.calculation}
               busy={busy === "calculate"}
@@ -391,6 +440,18 @@ export default function App() {
               </p>
             </button>
           </aside>
+          {workspace.mode === "compare" && tokens.length > 0 && (
+            <ModelComparison
+              tokens={tokens}
+              strokes={ink.strokes}
+              index={inspected}
+              onSelect={openInspector}
+              onClose={closeInspector}
+              source={workspace.expressionSource}
+              onUseModel={workspace.useModelExpression}
+              health={workspace.health}
+            />
+          )}
         </div>
       </main>
       <footer className="site-footer">

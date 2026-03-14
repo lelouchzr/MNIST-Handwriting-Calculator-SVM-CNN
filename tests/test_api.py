@@ -61,3 +61,35 @@ def test_explanation_api(client):
 def test_invalid_explanation_selection_is_rejected(client, index):
     response = client.post("/api/explain", json={"strokes": [[[20, 20]]], "symbol_index": index})
     assert response.status_code == 422
+
+
+def test_compare_api_and_model_health(client):
+    status = client.get("/api/health").json()
+    assert status["models"]["svm"]["ready"] is True
+    assert status["models"]["cnn"]["ready"] is True
+    strokes = [[[20, 50], [90, 50]], [[55, 20], [55, 80]]]
+    response = client.post("/api/recognize", json={"strokes": strokes, "model": "compare"})
+    assert response.status_code == 200
+    assert response.json()["model"] == "compare"
+    assert set(response.json()["tokens"][0]["models"]) == {"svm", "cnn"}
+    explanation = client.post(
+        "/api/explain", json={"strokes": strokes, "symbol_index": 0, "model": "compare"}
+    )
+    assert explanation.status_code == 200
+    assert set(explanation.json()["models"]) == {"svm", "cnn"}
+
+
+def test_unknown_model_is_rejected(client):
+    assert (
+        client.post(
+            "/api/recognize", json={"strokes": [[[20, 20]]], "model": "unknown"}
+        ).status_code
+        == 422
+    )
+
+
+def test_unavailable_cnn_does_not_silently_fallback(client):
+    app.state.recognizer.cnn = None
+    response = client.post("/api/recognize", json={"strokes": [[[20, 20]]], "model": "cnn"})
+    assert response.status_code == 503
+    assert "CNN" in response.json()["detail"]

@@ -39,7 +39,7 @@ export function RecognitionInspector({
   const [attempt, setAttempt] = useState(0);
   const cache = useRef(new Map<string, Explanation>());
   const tabButtons = useRef<(HTMLButtonElement | null)[]>([]);
-  const key = `${index}:${token.predicted_label}:${token.confidence}:${token.input.normalized}`;
+  const key = `${token.model_id}:${index}:${token.predicted_label}:${token.confidence}:${token.input.normalized}`;
   const explanation = result?.key === key ? result.value : null;
   const error = failure?.key === key ? failure.message : null;
 
@@ -54,7 +54,7 @@ export function RecognitionInspector({
     setFailure(null);
     request<Explanation>(
       "explain",
-      { strokes, symbol_index: index },
+      { strokes, symbol_index: index, model: token.model_id },
       AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]),
     )
       .then((value) => {
@@ -139,7 +139,9 @@ export function RecognitionInspector({
       </div>
       <div className="inspector-prediction">
         <span>
-          {token.method === "classifier" ? "Model prediction" : "Size rule"}
+          {token.method === "classifier"
+            ? `${token.model_id.toUpperCase()} prediction`
+            : "Size rule"}
         </span>
         <strong>{token.predicted_label}</strong>
         {token.method === "classifier" && (
@@ -242,8 +244,10 @@ export function RecognitionInspector({
             <>
               <h3>All {token.probabilities.length} classes</h3>
               <p className="inspector-note">
-                Calibrated model estimates, sorted by score. A high score can
-                still be wrong.
+                {token.model_id === "cnn"
+                  ? "Uncalibrated CNN softmax scores"
+                  : "Calibrated SVM probabilities"}
+                , sorted by score. A high score can still be wrong.
               </p>
               <ol className="probability-list" aria-label="Class probabilities">
                 {token.probabilities.map((item, position) => (

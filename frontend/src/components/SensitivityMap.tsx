@@ -4,13 +4,17 @@ import type { Explanation } from "../types";
 export function SensitivityMap({
   explanation,
   image,
+  scale,
+  modelName,
 }: {
   explanation: Explanation;
   image: string;
+  scale?: number;
+  modelName?: string;
 }) {
   const id = useId().replaceAll(":", "");
   const rows = explanation.sensitivity ?? [];
-  const magnitude = explanation.max_abs_change ?? 0;
+  const magnitude = scale ?? explanation.max_abs_change ?? 0;
   return (
     <figure className="sensitivity-figure">
       <svg
@@ -20,7 +24,8 @@ export function SensitivityMap({
         aria-labelledby={`${id}-title ${id}-description`}
       >
         <title id={`${id}-title`}>
-          Sensitivity of the prediction {explanation.label}
+          Sensitivity of the {modelName ? `${modelName} ` : ""}prediction{" "}
+          {explanation.label}
         </title>
         <desc id={`${id}-description`}>
           Yellow shows regions where masking lowered the original prediction

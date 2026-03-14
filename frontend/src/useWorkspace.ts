@@ -2,9 +2,16 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { request } from "./api";
 import { readHistory, saveHistory } from "./history";
 import { emptyInk, inkHistory } from "./inkHistory";
-import type { Calculation, HistoryEntry, Stroke, Token } from "./types";
-
-type Health = { recognition_ready: boolean; model_error: string | null };
+import { tokensForModel } from "./modelComparison";
+import type {
+  Calculation,
+  HistoryEntry,
+  Stroke,
+  Token,
+  Health,
+  RecognitionMode,
+  ModelId,
+} from "./types";
 
 function errorMessage(cause: unknown): string {
   if (cause instanceof Error) {
@@ -27,6 +34,8 @@ export function useWorkspace() {
   const [error, setError] = useState("");
   const [storageWarning, setStorageWarning] = useState(false);
   const [health, setHealth] = useState<Health | null>(null);
+  const [mode, setMode] = useState<RecognitionMode>("svm");
+  const [expressionSource, setExpressionSource] = useState<ModelId>("svm");
   const pending = useRef<AbortController | null>(null);
   const revision = useRef(0);
 
@@ -105,13 +114,13 @@ export function useWorkspace() {
     try {
       const result = await request<{ tokens: Token[]; expression: string }>(
         "recognize",
-        { strokes: ink.strokes },
+        { strokes: ink.strokes, model: mode },
         AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]),
       );
       if (version !== revision.current) return;
       setTokens(result.tokens);
       setExpression(result.expression);
-      setHealth({ recognition_ready: true, model_error: null });
+      setExpressionSource(mode === "cnn" ? "cnn" : "svm");
     } catch (cause) {
       if (version === revision.current) setError(errorMessage(cause));
     } finally {
@@ -165,6 +174,21 @@ export function useWorkspace() {
     setCalculation(entry);
   }
 
+  function changeMode(value: RecognitionMode) {
+    if (value === mode) return;
+    resetReading();
+    setMode(value);
+  }
+
+  function useModelExpression(model: ModelId) {
+    const next = tokensForModel(tokens, model);
+    if (!next) return;
+    invalidate();
+    setTokens(next);
+    setExpression(next.map((token) => token.label).join(""));
+    setExpressionSource(model);
+  }
+
   return {
     ink,
     tokens,
@@ -175,6 +199,10 @@ export function useWorkspace() {
     error,
     storageWarning,
     health,
+    mode,
+    changeMode,
+    expressionSource,
+    useModelExpression,
     changeInk,
     undo,
     redo,
