@@ -26,13 +26,7 @@ export function TokenReview({ tokens, onCorrect, inspectedIndex }: Props) {
     if (selected !== null) buttons.current[selected]?.focus();
     setSelected(null);
   }
-  if (!tokens.length)
-    return (
-      <div className="reading-empty">
-        <span aria-hidden="true">—</span>
-        <p>Your handwriting will appear here, one symbol at a time.</p>
-      </div>
-    );
+  if (!tokens.length) return null;
   return (
     <>
       <div className="token-list" aria-label="Recognized symbols">
@@ -66,9 +60,6 @@ export function TokenReview({ tokens, onCorrect, inspectedIndex }: Props) {
           </button>
         ))}
       </div>
-      <p className="reading-hint">
-        Click a symbol to correct it. Scores are estimates.
-      </p>
       {active && selected !== null && (
         <div
           id="symbol-correction"

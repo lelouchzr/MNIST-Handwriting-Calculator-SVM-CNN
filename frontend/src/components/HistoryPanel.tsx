@@ -19,6 +19,7 @@ export function HistoryPanel({
   onClear,
   storageWarning,
 }: Props) {
+  if (!entries.length && !storageWarning) return null;
   const visible = expanded ? entries : entries.slice(0, 3);
   return (
     <section
@@ -41,7 +42,7 @@ export function HistoryPanel({
           </button>
         )}
       </div>
-      {visible.length ? (
+      {visible.length > 0 && (
         <ol id="history-entries" className="history-list">
           {visible.map((entry) => (
             <li key={entry.id}>
@@ -65,15 +66,6 @@ export function HistoryPanel({
             </li>
           ))}
         </ol>
-      ) : (
-        <div className="history-empty">
-          <p>No calculations yet.</p>
-          <span>
-            Your last 20 results will stay
-            <br />
-            in this browser.
-          </span>
-        </div>
       )}
       {entries.length > 0 && (
         <div className="history-bottom">

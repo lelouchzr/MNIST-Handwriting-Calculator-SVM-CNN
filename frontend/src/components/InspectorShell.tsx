@@ -77,14 +77,13 @@ export function InspectorShell({
         >
           <div className="inspection-dock-heading">
             <div>
-              <p className="eyebrow">Recognition details</p>
               <Dialog.Title>Inspect</Dialog.Title>
             </div>
             <Dialog.Close className="icon-button" aria-label="Close inspector">
               <X size={23} />
             </Dialog.Close>
           </div>
-          <Dialog.Description className="inspection-description">
+          <Dialog.Description className="sr-only">
             {comparison
               ? "Same input. Two models."
               : "From your drawing to the model prediction."}

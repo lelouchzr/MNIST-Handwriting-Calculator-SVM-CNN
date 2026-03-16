@@ -103,3 +103,11 @@ Editing the drawing leaves the dock open with a recognition-needed state. This
 keeps canvas geometry stable under an active pointer, unmounts obsolete detail
 views and aborts their pending explanation requests. The next recognition selects
 the first new symbol. Closing the dock returns the normal working layout.
+
+## Algorithm-demo copy cleanup
+
+The UI is a lightweight companion to the recognition algorithms. The visible
+introduction, slogans, help dialog and shortcut, footer, repeated editing advice
+and empty-state onboarding have been removed. The working controls, segmentation,
+class scores, evaluation metrics and masking explanations remain. Calibration
+labels and real error messages stay visible where needed to interpret the models.

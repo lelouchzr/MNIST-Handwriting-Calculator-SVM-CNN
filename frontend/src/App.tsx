@@ -12,7 +12,6 @@ import {
 } from "@phosphor-icons/react";
 import { InkCanvas, downloadInk } from "./InkCanvas";
 import { HistoryPanel } from "./components/HistoryPanel";
-import { HelpDialog } from "./components/HelpDialog";
 import { ResultPanel } from "./components/ResultPanel";
 import { TokenReview } from "./components/TokenReview";
 import { RecognitionInspector } from "./components/RecognitionInspector";
@@ -28,7 +27,6 @@ const operators = ["+", "−", "×", "÷", "(", ")", "."];
 
 export default function App() {
   const workspace = useWorkspace();
-  const [helpOpen, setHelpOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [inspected, setInspected] = useState<number | null>(null);
   const [inspectorVisible, setInspectorVisible] = useState(false);
@@ -73,29 +71,6 @@ export default function App() {
     setInspectorVisible(false);
     setInspected(null);
   }
-
-  useEffect(() => {
-    const onHelpKey = (event: KeyboardEvent) => {
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.closest('input, textarea, select, dialog, [role="dialog"]') ||
-          target.isContentEditable)
-      )
-        return;
-      if (
-        event.key === "?" &&
-        !event.metaKey &&
-        !event.ctrlKey &&
-        !event.altKey
-      ) {
-        event.preventDefault();
-        setHelpOpen(true);
-      }
-    };
-    window.addEventListener("keydown", onHelpKey);
-    return () => window.removeEventListener("keydown", onHelpKey);
-  }, []);
 
   function loadExample() {
     const bounds = drawing.current
@@ -142,19 +117,7 @@ export default function App() {
         <a className="brand" href="#workspace" aria-label="InkCalc home">
           inkcalc<span aria-hidden="true">/</span>
         </a>
-        <nav className="main-nav" aria-label="Main navigation">
-          <a className="active" href="#workspace" aria-current="page">
-            Workspace
-          </a>
-        </nav>
         <div className="header-utilities">
-          <button className="help-trigger" onClick={() => setHelpOpen(true)}>
-            Help
-            <span className="shortcut" aria-hidden="true">
-              ?
-            </span>
-          </button>
-          <span className="utility-divider" />
           <a
             className="github-link"
             href="https://github.com/lelouchzr/inkcalc"
@@ -167,16 +130,9 @@ export default function App() {
         </div>
       </header>
       <main id="workspace" tabIndex={-1}>
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">Handwritten math</p>
-            <h1>By hand.</h1>
-          </div>
-          <p className="page-caption">Write. Check. Calculate.</p>
-        </div>
         <div className="model-controls">
           <fieldset className="model-switch">
-            <legend>Recognition model</legend>
+            <legend>Model</legend>
             {(["svm", "cnn", "compare"] as const).map((mode) => (
               <label key={mode}>
                 <input
@@ -198,18 +154,11 @@ export default function App() {
               </label>
             ))}
           </fieldset>
-          <p>
-            {workspace.mode === "compare"
-              ? "One drawing. Both models. Inspect agreements and differences."
-              : workspace.mode === "cnn"
-                ? "CNN · uncalibrated softmax scores"
-                : "HOG + SVM · calibrated probabilities"}
-            {workspace.mode === "compare" && (
-              <button className="challenge-button" onClick={loadChallenge}>
-                Load synthetic challenge
-              </button>
-            )}
-          </p>
+          {workspace.mode === "compare" && (
+            <button className="challenge-button" onClick={loadChallenge}>
+              Synthetic example
+            </button>
+          )}
         </div>
         <div className="workspace-layout">
           <div className="drawing-column">
@@ -282,10 +231,6 @@ export default function App() {
                 onInspect={openInspector}
               />
               <div className="canvas-caption">
-                <span className="desktop-tip">
-                  One line. Leave a gap between symbols.
-                </span>
-                <span className="mobile-tip">Space out your symbols.</span>
                 {tokens.length > 0 && (
                   <label className="segmentation-toggle">
                     <input
@@ -305,8 +250,7 @@ export default function App() {
               </div>
               <div className="drawing-actions">
                 <button className="example-button" onClick={loadExample}>
-                  <span className="desktop-tip">Load an example</span>
-                  <span className="mobile-tip">Example</span>
+                  Example
                 </button>
                 <button
                   className="recognize-button"
@@ -329,7 +273,7 @@ export default function App() {
                   <span>
                     {tokens.length
                       ? `${tokens.length} ${tokens.length === 1 ? "symbol" : "symbols"}`
-                      : "Check before calculating"}
+                      : null}
                   </span>
                   <button
                     className="inspect-trigger"
@@ -401,7 +345,6 @@ export default function App() {
                       {symbol}
                     </button>
                   ))}
-                  <span>Editable with your keyboard.</span>
                 </div>
               </form>
               {workspace.error && (
@@ -431,17 +374,6 @@ export default function App() {
               onClear={workspace.clearHistory}
               storageWarning={workspace.storageWarning}
             />
-            <button
-              className="correction-tip"
-              onClick={() => setHelpOpen(true)}
-            >
-              <span aria-hidden="true">i</span>
-              <p>
-                Unsure about a symbol?
-                <br />
-                <span>Click it to correct it.</span>
-              </p>
-            </button>
           </aside>
           {workspace.mode === "compare" && tokens.length > 0 && (
             <ModelComparison
@@ -455,14 +387,6 @@ export default function App() {
           )}
         </div>
       </main>
-      <footer className="site-footer">
-        <span>
-          Calculated locally <span aria-hidden="true">·</span> No drawings saved
-        </span>
-        <span className="footer-keyboard">
-          <kbd>↵</kbd> Press Enter to calculate
-        </span>
-      </footer>
       <InspectorShell
         open={inspectorVisible}
         tokens={tokens}
@@ -489,18 +413,11 @@ export default function App() {
           ))}
         {!hasInspectedToken && (
           <div className="inspection-empty" role="status">
-            <h3>
-              {ink.strokes.length
-                ? "Drawing changed."
-                : "Ready for your next drawing."}
-            </h3>
-            <p>
-              Choose Recognize after drawing to inspect the updated predictions.
-            </p>
+            <h3>{ink.strokes.length ? "Drawing changed." : "No input."}</h3>
+            <p>Recognize again.</p>
           </div>
         )}
       </InspectorShell>
-      <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }

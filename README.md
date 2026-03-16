@@ -1,10 +1,8 @@
 # InkCalc
 
-A handwriting-first math workspace. Draw a single-line expression, inspect each
-prediction, correct ambiguous symbols, and calculate without running arbitrary code.
-
-Python handles image preparation, classification and arithmetic. React handles the
-canvas, editable predictions and browser-local calculation history.
+A handwriting-recognition project comparing a calibrated HOG + SVM with a CNN.
+Python handles preprocessing, segmentation, classification and arithmetic. A small
+React interface provides a drawing canvas and visual inspection of the models.
 
 ![InkCalc with the inspection dock beside the drawing](docs/inspector-dock.png)
 
@@ -51,9 +49,8 @@ them into real controls: a square-grid notebook, compact symbol review, a promin
 result and a flat history list. Fonts are served locally. See the
 [visual direction and reference analysis](docs/design/art-direction.md).
 
-Keyboard shortcuts: Ctrl/⌘ Z to undo, Ctrl/⌘ Shift Z to redo, Enter in the expression
-field to calculate, and `?` outside editable fields to open help. Escape closes help
-or the symbol correction controls. History entries can be reopened without creating
+Keyboard shortcuts: Ctrl/⌘ Z to undo, Ctrl/⌘ Shift Z to redo, and Enter in the expression
+field to calculate. Escape closes inspection or symbol correction. History entries can be reopened without creating
 a duplicate calculation.
 
 ## Inspect recognition

@@ -39,7 +39,6 @@ export function ModelComparison({
     <section className="comparison-panel" aria-labelledby="comparison-title">
       <div className="comparison-heading">
         <div>
-          <p className="eyebrow">Same drawing. Two models.</p>
           <h2 id="comparison-title">Compare predictions</h2>
         </div>
         <p>
@@ -49,8 +48,7 @@ export function ModelComparison({
         </p>
       </div>
       <p className="comparison-note">
-        SVM probabilities are calibrated; CNN softmax scores are not. Higher
-        confidence alone does not identify the better model.
+        SVM: calibrated probability · CNN: uncalibrated softmax.
       </p>
       <div className="comparison-expressions">
         {modelIds.map((model) => (
@@ -85,13 +83,10 @@ export function ModelComparison({
             </span>
           );
         })}
-        <span>
-          Same 2,000 test digits. Operator handwriting needs separate
-          evaluation.
-        </span>
+        <span>MNIST test · 2,000 digits.</span>
       </div>
       <table className="comparison-symbols">
-        <caption>Select a symbol to inspect both models.</caption>
+        <caption className="sr-only">Per-symbol model predictions</caption>
         <thead>
           <tr>
             <th>Symbol</th>

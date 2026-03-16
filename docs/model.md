@@ -109,7 +109,7 @@ and sensitivity retain the normalized float values.
 
 ## Demonstration example
 
-The "Load synthetic challenge" action uses an original jittered pen path selected to
+The "Synthetic example" action uses an original jittered pen path selected to
 illustrate a disagreement in the committed models. It is explicitly a synthetic demo,
 not an accuracy benchmark or an additional held-out evaluation set. Predictions and
 maps are always computed by the actual models. Retrained models may agree on this example.

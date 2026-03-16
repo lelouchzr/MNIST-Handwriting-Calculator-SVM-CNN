@@ -140,8 +140,7 @@ export function InkCanvas({
       />
       {!strokes.length && (
         <div className="paper-placeholder" aria-hidden="true">
-          <span>Write here.</span>
-          <p>or load an example to get started</p>
+          <span>Draw</span>
         </div>
       )}
       {showSegmentation && tokens.length > 0 && (
@@ -176,9 +175,6 @@ export function InkCanvas({
           })}
         </div>
       )}
-      <span className="paper-mark" aria-hidden="true">
-        01
-      </span>
     </div>
   );
 }

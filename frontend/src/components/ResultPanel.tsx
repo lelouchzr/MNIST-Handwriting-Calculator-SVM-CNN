@@ -25,11 +25,7 @@ export function ResultPanel({
       <div className="result-summary">
         <div className="result-label">
           <h2 id="result-title">Result</h2>
-          <p>
-            {calculation
-              ? displayExpression(calculation.expression)
-              : "Your turn."}
-          </p>
+          {calculation && <p>{displayExpression(calculation.expression)}</p>}
         </div>
         <div
           className={`result-number ${calculation && calculation.result.length > 7 ? "long-result" : ""}`}
@@ -39,28 +35,20 @@ export function ResultPanel({
           {busy ? "…" : (calculation?.result ?? "—")}
         </div>
       </div>
-      <div className="calculation-steps">
-        {calculation ? (
-          <>
-            <h3>Calculation steps</h3>
-            {calculation.steps.length ? (
-              <ol>
-                {calculation.steps.map((step, index) => (
-                  <li key={index}>{step}</li>
-                ))}
-              </ol>
-            ) : (
-              <p>{calculation.result}</p>
-            )}
-          </>
-        ) : (
-          <p>
-            Your result and its steps
-            <br />
-            will appear here.
-          </p>
-        )}
-      </div>
+      {calculation && (
+        <div className="calculation-steps">
+          <h3>Calculation steps</h3>
+          {calculation.steps.length ? (
+            <ol>
+              {calculation.steps.map((step, index) => (
+                <li key={index}>{step}</li>
+              ))}
+            </ol>
+          ) : (
+            <p>{calculation.result}</p>
+          )}
+        </div>
+      )}
     </section>
   );
 }
