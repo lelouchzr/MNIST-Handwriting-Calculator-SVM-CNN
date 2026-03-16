@@ -4,7 +4,7 @@ A handwriting-recognition project comparing a calibrated HOG + SVM with a CNN.
 Python handles preprocessing, segmentation, classification and arithmetic. A small
 React interface provides a drawing canvas and visual inspection of the models.
 
-![InkCalc with the inspection dock beside the drawing](docs/inspector-dock.png)
+![Input preparation and model pipelines beside the drawing](docs/inspector-input-pipeline.png)
 
 ## Development
 
@@ -70,13 +70,24 @@ discards outdated predictions and explanations. Resizing preserves the selected
 symbol and active tab. Base UI provides Dialog and Tabs behavior; the existing CSS
 defines the appearance.
 
-- **Input** shows the raster crop, its dimensions, and the normalized 28 × 28 input.
+- **Input** shows a visual crop → fit/center → 28 × 28 pipeline, followed by the
+  HOG → SVM and/or convolution → CNN route. Small score distributions use the
+  recorded model outputs; feature glyphs are architecture schematics.
 - **Predictions** shows all 16 class scores in descending order: calibrated
   probabilities for the SVM, uncalibrated softmax scores for the CNN.
 - **Explanation** calculates sensitivity on demand using 576 overlapping 5 × 5
   zero masks. Yellow means masking lowered the original prediction score; hatching
   means it raised the score. Values use percentage points and colors are scaled
   independently for each symbol.
+
+A masking diagram replaces the introductory paragraphs. Its slider previews all
+576 zero-mask positions on the selected input. Moving it does not recompute or
+change the averaged maps. Technical notes, bounds and interpretation limits are
+available in the collapsed **Technical details** section. Decimal marks show a
+size-rule diagram and bypass the model routes.
+
+See the [masking diagram](docs/inspector-masking-diagram.png) and the
+[mobile diagrams](docs/inspector-diagrams-mobile.png).
 
 Manual expression corrections do not rewrite the original model prediction or its
 explanation. Tiny decimal marks use a size rule and have no classifier probabilities

@@ -111,3 +111,26 @@ introduction, slogans, help dialog and shortcut, footer, repeated editing advice
 and empty-state onboarding have been removed. The working controls, segmentation,
 class scores, evaluation metrics and masking explanations remain. Calibration
 labels and real error messages stay visible where needed to interpret the models.
+
+## Visual algorithm explanations
+
+Two fresh section references were generated before implementation:
+`input-pipeline-reference.png` and `masking-reference.png`. The input reference
+uses two large pixel previews joined by a short transform arrow, then a branching
+model flow. The masking reference uses a three-stage method strip, signed maps
+and a collapsed technical section. Both preserve the existing square borders,
+white/offwhite surfaces, black type and yellow accent.
+
+The implementation extracts that hierarchy with a three-column crop/transform/input
+row, an explicit fork into model routes, and a separate masking-method strip. Short
+labels use monospace type at 11–12 px; longer details stay inside native disclosure
+controls. The panel keeps its existing header, selection and tabs.
+
+Diagrams are responsive HTML/SVG, not generated bitmap assets in the running app.
+The crop and normalized previews belong to the selected symbol, and the 16-class
+bar distributions come from actual model probabilities. HOG and convolution glyphs
+are schematic architecture icons, not computed feature maps. The preview slider
+shows the exact 5 × 5 zero-mask position on the fixed 28 × 28 input, with 24 × 24
+valid positions. The delta node is a formula, not a fabricated masked confidence.
+The sensitivity maps continue to use the server's averaged occlusion results.
+The references' decorative scores and class numbering are not used as data.
