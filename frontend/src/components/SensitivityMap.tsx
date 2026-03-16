@@ -6,11 +6,13 @@ export function SensitivityMap({
   image,
   scale,
   modelName,
+  showLegend = true,
 }: {
   explanation: Explanation;
   image: string;
   scale?: number;
   modelName?: string;
+  showLegend?: boolean;
 }) {
   const id = useId().replaceAll(":", "");
   const rows = explanation.sensitivity ?? [];
@@ -86,14 +88,23 @@ export function SensitivityMap({
         <span>0</span>
         <span>+{(magnitude * 100).toFixed(1)} pp</span>
       </figcaption>
-      <div className="sensitivity-legend">
-        <span>
-          <i className="legend-drop" /> Mask lowers score
-        </span>
-        <span>
-          <i className="legend-rise" /> Mask raises score
-        </span>
-      </div>
+      {showLegend && <SensitivityLegend />}
     </figure>
+  );
+}
+
+export function SensitivityLegend() {
+  return (
+    <div
+      className="sensitivity-legend"
+      aria-label="Effect of masking on the target score"
+    >
+      <span>
+        <i className="legend-drop" aria-hidden="true" /> Score drops
+      </span>
+      <span>
+        <i className="legend-rise" aria-hidden="true" /> Score rises
+      </span>
+    </div>
   );
 }

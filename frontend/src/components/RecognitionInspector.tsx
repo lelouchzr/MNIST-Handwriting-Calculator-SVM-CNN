@@ -3,6 +3,12 @@ import { ArrowClockwise } from "@phosphor-icons/react";
 import { request } from "../api";
 import type { Explanation, Stroke, Token } from "../types";
 import { SensitivityMap } from "./SensitivityMap";
+import {
+  GeometryRule,
+  InputPipeline,
+  MaskingDiagram,
+  SensitivityDetails,
+} from "./RecognitionDiagrams";
 import { InspectionTabs } from "./InspectionTabs";
 import type { InspectionTab } from "./InspectionTabs";
 
@@ -86,76 +92,24 @@ export function RecognitionInspector({ tokens, index, strokes }: Props) {
       </div>
       {token.corrected && (
         <p className="inspector-edited">
-          Expression edited to <strong>{token.label}</strong>. Inspection still
-          describes the original recognition.
+          Edited → <strong>{token.label}</strong> · original model output
         </p>
       )}
       <InspectionTabs value={tab} onChange={setTab}>
-        {tab === "Input" && (
-          <>
-            <h3>From strokes to pixels</h3>
-            <figure className="input-crop">
-              <div>
-                <img
-                  src={token.input.crop}
-                  alt={`Rasterized crop of symbol ${index + 1}`}
-                />
-              </div>
-              <figcaption>
-                Original crop{" "}
-                <span>
-                  {token.input.width} × {token.input.height} px
-                </span>
-              </figcaption>
-            </figure>
-            <span className="input-transition" aria-hidden="true">
-              ↓
-            </span>
-            <figure className="normalized-input">
-              <div className="pixel-frame">
-                <img
-                  src={token.input.normalized}
-                  width="224"
-                  height="224"
-                  alt={`Normalized 28 by 28 input for ${token.predicted_label}`}
-                />
-              </div>
-              <figcaption>28 × 28 · normalized input</figcaption>
-            </figure>
-            <p className="inspector-note">
-              Cropped to the ink, fitted within 20 × 20 pixels, then centered by
-              mass on a 28 × 28 frame. Light pixels represent ink.
-            </p>
-            {token.method === "geometry" && (
-              <p className="inspector-note">
-                This normalized image is a preview only. The decimal-point rule
-                uses the original drawing bounds.
-              </p>
-            )}
-            <p className="inspector-footnote">
-              Canvas bounds:{" "}
-              {token.box.map((value) => Math.round(value)).join(", ")}.
-            </p>
-          </>
-        )}
+        {tab === "Input" && <InputPipeline token={token} />}
         {tab === "Predictions" &&
           (token.method === "geometry" ? (
-            <div className="inspector-rule">
-              <h3>Detected by size</h3>
-              <p>
-                This mark is smaller than 12 logical pixels. It is treated as a
-                decimal point. No classifier probabilities were used.
-              </p>
-            </div>
+            <GeometryRule token={token} />
           ) : (
             <>
-              <h3>All {token.probabilities.length} classes</h3>
-              <p className="inspector-note">
-                {token.model_id === "cnn"
-                  ? "Uncalibrated CNN softmax scores"
-                  : "Calibrated SVM probabilities"}
-                , sorted by score. A high score can still be wrong.
-              </p>
+              <div className="diagram-meta">
+                <span>{token.probabilities.length} classes</span>
+                <span>
+                  {token.model_id === "cnn"
+                    ? "Softmax · uncalibrated"
+                    : "Calibrated probability"}
+                </span>
+              </div>
               <ol className="probability-list" aria-label="Class probabilities">
                 {token.probabilities.map((item, position) => (
                   <li
@@ -172,26 +126,23 @@ export function RecognitionInspector({ tokens, index, strokes }: Props) {
                   </li>
                 ))}
               </ol>
-              <p className="inspector-footnote">
-                Lead over second place:{" "}
-                {(
-                  (token.probabilities[0].confidence -
-                    token.probabilities[1].confidence) *
-                  100
-                ).toFixed(1)}{" "}
-                percentage points.
-              </p>
+              <div className="score-gap">
+                <span>Top-2 gap</span>
+                <strong>
+                  {" "}
+                  {(
+                    (token.probabilities[0].confidence -
+                      token.probabilities[1].confidence) *
+                    100
+                  ).toFixed(1)}{" "}
+                  pp
+                </strong>
+              </div>
             </>
           ))}
         {tab === "Explanation" &&
           (token.method === "geometry" ? (
-            <div className="inspector-rule">
-              <h3>No model explanation</h3>
-              <p>
-                This decimal point was detected by size, not the classifier. A
-                sensitivity map would not describe that rule.
-              </p>
-            </div>
+            <GeometryRule token={token} />
           ) : error ? (
             <div className="inspector-failure" role="alert">
               <p>{error}</p>
@@ -207,30 +158,24 @@ export function RecognitionInspector({ tokens, index, strokes }: Props) {
             <div className="explanation-loading" role="status">
               <span aria-hidden="true">⋯</span>
               <p>Masking 576 regions…</p>
-              <small>Keeping the normalized input fixed.</small>
             </div>
           ) : !explanation.supported ? (
             <p className="inspector-note">{explanation.reason}</p>
           ) : (
             <>
-              <h3>What changes the score?</h3>
-              <p className="inspector-note">
-                Each 5 × 5 region is masked to zero, then the model predicts
-                again. Changes are averaged across overlapping windows.
-              </p>
+              <MaskingDiagram
+                image={token.input.normalized}
+                patchSize={explanation.patch_size}
+              />
               <SensitivityMap
                 explanation={explanation}
                 image={token.input.normalized}
               />
-              <p className="inspector-footnote">
-                Original score for {explanation.label}:{" "}
-                {probability(explanation.baseline_confidence ?? 0)} ·{" "}
-                {explanation.windows} masks · pp = percentage points.
-              </p>
-              <p className="inspector-note">
-                Colors are scaled per symbol. This measures sensitivity to
-                masking, not a causal explanation.
-              </p>
+              <div className="diagram-meta">
+                <span>{explanation.windows} masks</span>
+                <span>Per-symbol scale · pp</span>
+              </div>
+              <SensitivityDetails />
             </>
           ))}
       </InspectionTabs>

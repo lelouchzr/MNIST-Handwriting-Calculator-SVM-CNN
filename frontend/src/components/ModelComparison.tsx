@@ -8,7 +8,13 @@ import type {
   Stroke,
   Token,
 } from "../types";
-import { SensitivityMap } from "./SensitivityMap";
+import { SensitivityMap, SensitivityLegend } from "./SensitivityMap";
+import {
+  GeometryRule,
+  InputPipeline,
+  MaskingDiagram,
+  SensitivityDetails,
+} from "./RecognitionDiagrams";
 
 import { InspectionTabs } from "./InspectionTabs";
 import type { InspectionTab } from "./InspectionTabs";
@@ -212,8 +218,7 @@ export function ComparisonInspector({
     <div className="comparison-details">
       {token.corrected && (
         <p className="inspector-edited">
-          Expression edited to {token.label}. Both model predictions below are
-          unchanged.
+          Edited → {token.label} · original model outputs
         </p>
       )}
       <div className="comparison-picks">
@@ -230,46 +235,16 @@ export function ComparisonInspector({
         ))}
       </div>
       <InspectionTabs value={tab} onChange={setTab} comparison>
-        {tab === "Input" && (
-          <div className="shared-input">
-            <div>
-              <h4>One input for both models</h4>
-              <p>
-                Both predictions use this exact normalized image and the same
-                segmentation bounds.
-              </p>
-              <figure className="input-crop">
-                <div>
-                  <img src={token.input.crop} alt="Shared raster crop" />
-                </div>
-                <figcaption>
-                  Original crop · {token.input.width} × {token.input.height} px
-                </figcaption>
-              </figure>
-            </div>
-            <figure className="normalized-input">
-              <div className="pixel-frame">
-                <img
-                  src={token.input.normalized}
-                  alt="Shared normalized 28 by 28 input"
-                />
-              </div>
-              <figcaption>28 × 28 · shared input</figcaption>
-            </figure>
-          </div>
-        )}
+        {tab === "Input" && <InputPipeline token={token} />}
         {tab === "Predictions" &&
           (token.method === "geometry" ? (
-            <p className="inspector-note">
-              This decimal mark uses a size rule. Neither classifier supplied
-              probabilities.
-            </p>
+            <GeometryRule token={token} />
           ) : (
             <>
-              <p className="comparison-note">
-                All 16 classes, ranked by SVM score. CNN scores are uncalibrated
-                softmax estimates.
-              </p>
+              <div className="diagram-meta">
+                <span>16 classes · sorted by SVM</span>
+                <span>CNN: uncalibrated</span>
+              </div>
               <table className="comparison-scores">
                 <caption className="sr-only">
                   Class scores for SVM and CNN
@@ -310,10 +285,7 @@ export function ComparisonInspector({
           ))}
         {tab === "Explanation" &&
           (token.method === "geometry" ? (
-            <p className="inspector-note">
-              Decimal points are detected by size. No model sensitivity maps are
-              available.
-            </p>
+            <GeometryRule token={token} />
           ) : error ? (
             <div className="inspector-failure" role="alert">
               <p>{error}</p>
@@ -328,52 +300,50 @@ export function ComparisonInspector({
           ) : !explanation ? (
             <div className="explanation-loading" role="status">
               <p>Masking 576 regions for each model…</p>
-              <small>The input remains fixed for both classifiers.</small>
             </div>
           ) : (
             <>
-              <p className="comparison-note">
-                Each map explains that model’s own top class. Both maps share
-                the same color scale; yellow means masking lowered that class
-                score. Hatching means masking raised it.
-              </p>
+              <MaskingDiagram
+                image={token.input.normalized}
+                patchSize={explanation.models.svm.patch_size}
+              />
+              <div className="diagram-meta">
+                <span>576 masks · averaged</span>
+                <span>Shared scale · pp</span>
+              </div>
+              <SensitivityLegend />
               <div className="comparison-maps">
                 {modelIds.map((model) => (
                   <section
                     key={model}
                     aria-label={`${model.toUpperCase()} explanation`}
                   >
-                    <h4>
-                      {model.toUpperCase()} · {explanation.models[model].label}
-                    </h4>
+                    <div className="map-heading">
+                      <h4>
+                        {model.toUpperCase()} ·{" "}
+                        {explanation.models[model].label}
+                      </h4>
+                      <span>
+                        {score(
+                          explanation.models[model].baseline_confidence ?? 0,
+                        )}
+                      </span>
+                    </div>
                     {explanation.models[model].supported ? (
-                      <>
-                        <SensitivityMap
-                          explanation={explanation.models[model]}
-                          image={token.input.normalized}
-                          scale={explanation.shared_max_abs_change}
-                          modelName={model.toUpperCase()}
-                        />
-                        <p className="inspector-footnote">
-                          Original{" "}
-                          {model === "cnn" ? "softmax score" : "probability"}:{" "}
-                          {score(
-                            explanation.models[model].baseline_confidence ?? 0,
-                          )}{" "}
-                          · 576 masks
-                        </p>
-                      </>
+                      <SensitivityMap
+                        explanation={explanation.models[model]}
+                        image={token.input.normalized}
+                        scale={explanation.shared_max_abs_change}
+                        modelName={model.toUpperCase()}
+                        showLegend={false}
+                      />
                     ) : (
                       <p>{explanation.models[model].reason}</p>
                     )}
                   </section>
                 ))}
               </div>
-              <p className="inspector-note">
-                5 × 5 zero masks on the fixed input; overlapping effects
-                averaged. Percentage-point changes are model sensitivities, not
-                causal explanations or proof that one model is better.
-              </p>
+              <SensitivityDetails />
             </>
           ))}
       </InspectionTabs>
