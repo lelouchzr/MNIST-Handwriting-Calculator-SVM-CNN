@@ -9,7 +9,7 @@ type Props = {
   tokens: Token[];
   selectedIndex: number | null;
   showSegmentation: boolean;
-  onInspect: (index: number) => void;
+  onInspect: (index: number, opener?: HTMLElement) => void;
 };
 export const WIDTH = 1000;
 export const HEIGHT = 360;
@@ -166,7 +166,7 @@ export function InkCanvas({
                 }}
                 aria-label={`Inspect symbol ${index + 1}: ${token.label}`}
                 aria-pressed={index === selectedIndex}
-                onClick={() => onInspect(index)}
+                onClick={(event) => onInspect(index, event.currentTarget)}
               >
                 <span>
                   {index + 1} · {token.label}

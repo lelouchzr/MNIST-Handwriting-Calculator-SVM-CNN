@@ -16,7 +16,11 @@ import { HelpDialog } from "./components/HelpDialog";
 import { ResultPanel } from "./components/ResultPanel";
 import { TokenReview } from "./components/TokenReview";
 import { RecognitionInspector } from "./components/RecognitionInspector";
-import { ModelComparison } from "./components/ModelComparison";
+import {
+  ModelComparison,
+  ComparisonInspector,
+} from "./components/ModelComparison";
+import { InspectorShell } from "./components/InspectorShell";
 import { sampleExpression, challengingDigit } from "./samples";
 import { useWorkspace } from "./useWorkspace";
 
@@ -27,29 +31,47 @@ export default function App() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [inspected, setInspected] = useState<number | null>(null);
+  const [inspectorVisible, setInspectorVisible] = useState(false);
   const [showSegmentation, setShowSegmentation] = useState(true);
-  const inspectButton = useRef<HTMLButtonElement>(null);
+  const inspectionOpener = useRef<HTMLElement | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const drawing = useRef<HTMLElement>(null);
   const { ink, expression, tokens, busy } = workspace;
+  const hasInspectedToken = inspected !== null && Boolean(tokens[inspected]);
 
   useEffect(() => {
     if (!tokens.length) setInspected(null);
-    else if (inspected !== null && inspected >= tokens.length) setInspected(0);
-  }, [tokens, inspected]);
+    else if (
+      inspectorVisible &&
+      (inspected === null || inspected >= tokens.length)
+    )
+      setInspected(0);
+  }, [tokens, inspected, inspectorVisible]);
 
-  function openInspector(index: number) {
+  function openInspector(index: number, opener?: HTMLElement) {
+    if (!tokens[index]) return;
+    const active = opener ?? document.activeElement;
+    if (
+      active instanceof HTMLElement &&
+      !active.closest("#recognition-inspector")
+    ) {
+      inspectionOpener.current = active;
+    }
     setInspected(index);
-    requestAnimationFrame(() => {
-      const panel = document.getElementById("recognition-inspector");
-      panel?.scrollIntoView({ block: "nearest" });
-      panel?.focus({ preventScroll: true });
-    });
+    setInspectorVisible(true);
+    // Table rows can be below the canvas; bring the drawing back beside the dock.
+    if (window.matchMedia("(min-width: 1100px)").matches) {
+      requestAnimationFrame(() => {
+        if ((drawing.current?.getBoundingClientRect().bottom ?? 0) < 100) {
+          drawing.current?.scrollIntoView({ block: "start" });
+        }
+      });
+    }
   }
 
   function closeInspector() {
+    setInspectorVisible(false);
     setInspected(null);
-    inspectButton.current?.focus({ preventScroll: true });
   }
 
   useEffect(() => {
@@ -57,7 +79,7 @@ export default function App() {
       const target = event.target;
       if (
         target instanceof HTMLElement &&
-        (target.closest("input, textarea, select, dialog") ||
+        (target.closest('input, textarea, select, dialog, [role="dialog"]') ||
           target.isContentEditable)
       )
         return;
@@ -112,7 +134,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${inspectorVisible ? "is-inspecting" : ""}`}>
       <a href="#workspace" className="skip-link">
         Skip to calculator
       </a>
@@ -311,10 +333,12 @@ export default function App() {
                   </span>
                   <button
                     className="inspect-trigger"
-                    ref={inspectButton}
                     disabled={!tokens.length}
-                    onClick={() => openInspector(inspected ?? 0)}
-                    aria-expanded={inspected !== null}
+                    onClick={(event) =>
+                      openInspector(inspected ?? 0, event.currentTarget)
+                    }
+                    aria-haspopup="dialog"
+                    aria-expanded={inspectorVisible}
                     aria-controls="recognition-inspector"
                     title={
                       tokens.length
@@ -395,17 +419,6 @@ export default function App() {
             </section>
           </div>
           <aside className="result-column" aria-label="Result and history">
-            {workspace.mode !== "compare" &&
-              inspected !== null &&
-              tokens[inspected] && (
-                <RecognitionInspector
-                  tokens={tokens}
-                  index={inspected}
-                  strokes={ink.strokes}
-                  onSelect={setInspected}
-                  onClose={closeInspector}
-                />
-              )}
             <ResultPanel
               calculation={workspace.calculation}
               busy={busy === "calculate"}
@@ -433,10 +446,8 @@ export default function App() {
           {workspace.mode === "compare" && tokens.length > 0 && (
             <ModelComparison
               tokens={tokens}
-              strokes={ink.strokes}
               index={inspected}
               onSelect={openInspector}
-              onClose={closeInspector}
               source={workspace.expressionSource}
               onUseModel={workspace.useModelExpression}
               health={workspace.health}
@@ -452,6 +463,43 @@ export default function App() {
           <kbd>↵</kbd> Press Enter to calculate
         </span>
       </footer>
+      <InspectorShell
+        open={inspectorVisible}
+        tokens={tokens}
+        index={inspected ?? 0}
+        onSelect={openInspector}
+        onClose={closeInspector}
+        returnFocus={inspectionOpener}
+        comparison={workspace.mode === "compare"}
+      >
+        {hasInspectedToken &&
+          inspected !== null &&
+          (workspace.mode === "compare" ? (
+            <ComparisonInspector
+              tokens={tokens}
+              index={inspected}
+              strokes={ink.strokes}
+            />
+          ) : (
+            <RecognitionInspector
+              tokens={tokens}
+              index={inspected}
+              strokes={ink.strokes}
+            />
+          ))}
+        {!hasInspectedToken && (
+          <div className="inspection-empty" role="status">
+            <h3>
+              {ink.strokes.length
+                ? "Drawing changed."
+                : "Ready for your next drawing."}
+            </h3>
+            <p>
+              Choose Recognize after drawing to inspect the updated predictions.
+            </p>
+          </div>
+        )}
+      </InspectorShell>
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );

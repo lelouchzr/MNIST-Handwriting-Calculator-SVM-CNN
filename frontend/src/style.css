@@ -1487,53 +1487,6 @@ kbd {
   border-color: var(--line);
   background: transparent;
 }
-.inspector-panel {
-  border: 1px solid var(--ink);
-  background: #faf9f3;
-  scroll-margin-top: 18px;
-}
-.inspector-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 17px 8px;
-}
-.inspector-heading .eyebrow {
-  font-size: 9px;
-  letter-spacing: 0.9px;
-  margin-bottom: 5px;
-}
-.inspector-heading h2 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 750;
-  letter-spacing: -0.8px;
-}
-.inspector-selection {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  padding: 4px 20px 12px;
-}
-.inspector-selection label {
-  font-size: 12px;
-  color: var(--muted);
-}
-.inspector-selection select {
-  min-width: 116px;
-  min-height: 44px;
-  font: 14px var(--mono);
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--ink);
-  padding: 7px 10px;
-  border-radius: 0;
-}
-.inspector-selection select:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
 .inspector-prediction {
   display: flex;
   align-items: baseline;
@@ -2063,39 +2016,6 @@ kbd {
 .comparison-symbols .is-selected th {
   box-shadow: inset 4px 0 0 var(--yellow);
 }
-.comparison-details {
-  border: 1px solid var(--ink);
-  margin-top: 26px;
-  background: #faf9f3;
-  scroll-margin-top: 18px;
-}
-.comparison-detail-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px 8px;
-}
-.comparison-detail-heading h3 {
-  margin: 0;
-  font-size: 23px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-}
-.comparison-detail-heading > div {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-.comparison-detail-heading select {
-  font: 13px var(--mono);
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 0;
-  background: #fff;
-  padding: 7px 9px;
-  color: var(--ink);
-}
 .comparison-picks {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2341,4 +2261,281 @@ kbd {
     margin-left: 0;
     min-height: 44px;
   }
+}
+
+/* Base UI owns interaction; the notebook palette remains the styling layer. */
+#root {
+  isolation: isolate;
+}
+.inspection-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgb(32 33 31 / 38%);
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+.inspection-backdrop[data-starting-style],
+.inspection-backdrop[data-ending-style] {
+  opacity: 0;
+}
+.inspection-dock {
+  --dock-width: clamp(400px, 32vw, 480px);
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 31;
+  display: flex;
+  flex-direction: column;
+  width: var(--dock-width);
+  height: 100dvh;
+  min-width: 0;
+  color: var(--ink);
+  background: #faf9f3;
+  border-left: 1px solid var(--ink);
+  outline: none;
+  transition: transform 180ms ease;
+}
+.inspection-dock[data-starting-style],
+.inspection-dock[data-ending-style] {
+  transform: translateX(100%);
+}
+.inspection-dock-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 20px 0;
+}
+.inspection-dock-heading .eyebrow {
+  font-size: 10px;
+  margin-bottom: 5px;
+}
+.inspection-dock-heading h2 {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -1px;
+}
+.inspection-description {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 9px 20px 18px;
+}
+.inspection-symbol-navigation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  margin: 0 20px;
+  padding: 12px 0;
+}
+.inspection-symbol-navigation label {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+.inspection-symbol-navigation select {
+  min-height: 44px;
+  max-width: 160px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
+  font: 13px var(--mono);
+}
+.inspection-symbol-navigation select:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.inspection-symbol-navigation .icon-button {
+  flex-shrink: 0;
+}
+.inspection-body,
+.inspection-body > div,
+.inspection-tabs-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.inspection-body .inspector-panel,
+.inspection-body .comparison-details {
+  border: 0;
+  margin: 0;
+  background: transparent;
+}
+.inspection-body .inspector-content,
+.inspection-body .comparison-tab-content {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  padding: 20px;
+}
+.inspection-body .inspector-tabs {
+  flex-shrink: 0;
+  max-width: none;
+  padding-inline: 12px;
+  border-top: 1px solid var(--line);
+}
+.inspection-body .comparison-tab-content {
+  border-top: 0;
+}
+.inspection-body .comparison-picks {
+  gap: 20px;
+  padding: 0 20px 16px;
+}
+.inspection-body .comparison-picks > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+}
+.inspection-body .comparison-picks span:first-child {
+  grid-column: 1 / -1;
+  font-size: 11px;
+}
+.inspection-body .comparison-picks span:last-child {
+  justify-self: end;
+}
+.inspection-body .comparison-scores th,
+.inspection-body .comparison-scores td {
+  padding: 10px 5px;
+}
+.inspection-body .comparison-scores td > span:last-child {
+  width: 52px;
+}
+.inspection-body .comparison-score-track {
+  width: calc(100% - 60px);
+  margin-right: 8px;
+}
+.inspection-body .shared-input,
+.inspection-body .comparison-maps {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+.inspection-body .comparison-maps > section {
+  padding: 16px;
+}
+.inspection-body .sensitivity-map,
+.inspection-body .sensitivity-figure > figcaption {
+  width: 224px;
+  max-width: 100%;
+}
+@media (min-width: 1100px) {
+  .app-shell.is-inspecting {
+    width: calc(100% - clamp(400px, 32vw, 480px));
+    max-width: 1536px;
+    margin-left: auto;
+    margin-right: clamp(400px, 32vw, 480px);
+    padding-inline: 32px;
+  }
+  .is-inspecting .workspace-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .is-inspecting .result-column {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .is-inspecting .correction-tip {
+    grid-column: 1 / -1;
+  }
+  .is-inspecting .main-nav {
+    margin-left: 20px;
+  }
+  .is-inspecting .page-caption {
+    display: none;
+  }
+  .is-inspecting .comparison-symbols td > span {
+    margin-left: 8px;
+  }
+}
+@media (max-width: 1099px) {
+  .inspection-dock {
+    inset: auto 0 0;
+    width: min(100%, 720px);
+    height: min(90dvh, 900px);
+    margin-inline: auto;
+    border: 1px solid var(--ink);
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .inspection-dock[data-starting-style],
+  .inspection-dock[data-ending-style] {
+    transform: translateY(100%);
+  }
+  .inspection-dock-heading {
+    padding-top: 18px;
+  }
+}
+@media (max-width: 360px) {
+  .inspection-dock-heading,
+  .inspection-body .inspector-content,
+  .inspection-body .comparison-tab-content {
+    padding-inline: 14px;
+  }
+  .inspection-symbol-navigation {
+    margin-inline: 14px;
+    gap: 2px;
+  }
+  .inspection-symbol-navigation select {
+    max-width: 120px;
+    padding-inline: 4px;
+    font-size: 12px;
+  }
+  .inspection-body .comparison-picks {
+    padding-inline: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .inspection-dock,
+  .inspection-backdrop {
+    transition: none;
+  }
+}
+@media (max-width: 1099px) and (max-height: 520px) {
+  .inspection-dock-heading {
+    padding-top: 6px;
+  }
+  .inspection-dock-heading h2 {
+    font-size: 24px;
+  }
+  .inspection-dock-heading .eyebrow,
+  .inspection-description {
+    display: none;
+  }
+  .inspection-symbol-navigation {
+    padding-block: 4px;
+  }
+  .inspection-body .comparison-picks,
+  .inspection-body .inspector-prediction {
+    margin-bottom: 0;
+    padding-bottom: 6px;
+  }
+  .inspection-body .comparison-picks > div {
+    gap: 1px 10px;
+  }
+}
+.inspection-body .inspection-empty {
+  flex: 1;
+  padding: 28px 20px;
+  border-top: 1px solid var(--line);
+}
+.inspection-empty h3 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 0 0 10px;
+}
+.inspection-empty p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0;
 }

@@ -1,33 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
-import { X, ArrowClockwise } from "@phosphor-icons/react";
+import { ArrowClockwise } from "@phosphor-icons/react";
 import { request } from "../api";
 import type { Explanation, Stroke, Token } from "../types";
 import { SensitivityMap } from "./SensitivityMap";
+import { InspectionTabs } from "./InspectionTabs";
+import type { InspectionTab } from "./InspectionTabs";
 
-const tabs = ["Input", "Predictions", "Explanation"] as const;
-type Tab = (typeof tabs)[number];
 type Props = {
   tokens: Token[];
   index: number;
   strokes: Stroke[];
-  onSelect: (index: number) => void;
-  onClose: () => void;
 };
 
 function probability(value: number) {
   return value > 0 && value < 0.001 ? "<0.1%" : `${(value * 100).toFixed(1)}%`;
 }
 
-export function RecognitionInspector({
-  tokens,
-  index,
-  strokes,
-  onSelect,
-  onClose,
-}: Props) {
+export function RecognitionInspector({ tokens, index, strokes }: Props) {
   const token = tokens[index];
-  const [tab, setTab] = useState<Tab>("Input");
+  const [tab, setTab] = useState<InspectionTab>("Input");
   const [result, setResult] = useState<{
     key: string;
     value: Explanation;
@@ -38,7 +29,6 @@ export function RecognitionInspector({
   } | null>(null);
   const [attempt, setAttempt] = useState(0);
   const cache = useRef(new Map<string, Explanation>());
-  const tabButtons = useRef<(HTMLButtonElement | null)[]>([]);
   const key = `${token.model_id}:${index}:${token.predicted_label}:${token.confidence}:${token.input.normalized}`;
   const explanation = result?.key === key ? result.value : null;
   const error = failure?.key === key ? failure.message : null;
@@ -81,62 +71,8 @@ export function RecognitionInspector({
     return () => controller.abort();
   }, [tab, key, index, strokes, token.method, token.predicted_label, attempt]);
 
-  function navigateTabs(
-    event: KeyboardEvent<HTMLButtonElement>,
-    position: number,
-  ) {
-    let next = position;
-    if (event.key === "ArrowRight") next = (position + 1) % tabs.length;
-    else if (event.key === "ArrowLeft")
-      next = (position + tabs.length - 1) % tabs.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = tabs.length - 1;
-    else return;
-    event.preventDefault();
-    setTab(tabs[next]);
-    tabButtons.current[next]?.focus();
-  }
-
   return (
-    <section
-      id="recognition-inspector"
-      className="inspector-panel"
-      tabIndex={-1}
-      aria-labelledby="inspector-title"
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.stopPropagation();
-          onClose();
-        }
-      }}
-    >
-      <div className="inspector-heading">
-        <div>
-          <p className="eyebrow">Recognition details</p>
-          <h2 id="inspector-title">Inspect</h2>
-        </div>
-        <button
-          className="icon-button"
-          aria-label="Close inspector"
-          onClick={onClose}
-        >
-          <X size={23} />
-        </button>
-      </div>
-      <div className="inspector-selection">
-        <label htmlFor="inspected-symbol">Symbol</label>
-        <select
-          id="inspected-symbol"
-          value={index}
-          onChange={(event) => onSelect(Number(event.target.value))}
-        >
-          {tokens.map((item, position) => (
-            <option key={position} value={position}>
-              {position + 1} / {tokens.length} · {item.label}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="inspector-panel">
       <div className="inspector-prediction">
         <span>
           {token.method === "classifier"
@@ -154,36 +90,7 @@ export function RecognitionInspector({
           describes the original recognition.
         </p>
       )}
-      <div
-        className="inspector-tabs"
-        role="tablist"
-        aria-label="Recognition inspection"
-      >
-        {tabs.map((name, position) => (
-          <button
-            key={name}
-            ref={(element) => {
-              tabButtons.current[position] = element;
-            }}
-            id={`inspect-tab-${name}`}
-            role="tab"
-            aria-selected={tab === name}
-            aria-controls={`inspect-panel-${name}`}
-            tabIndex={tab === name ? 0 : -1}
-            onClick={() => setTab(name)}
-            onKeyDown={(event) => navigateTabs(event, position)}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
-      <div
-        className="inspector-content"
-        id={`inspect-panel-${tab}`}
-        role="tabpanel"
-        aria-labelledby={`inspect-tab-${tab}`}
-        tabIndex={0}
-      >
+      <InspectionTabs value={tab} onChange={setTab}>
         {tab === "Input" && (
           <>
             <h3>From strokes to pixels</h3>
@@ -326,7 +233,7 @@ export function RecognitionInspector({
               </p>
             </>
           ))}
-      </div>
-    </section>
+      </InspectionTabs>
+    </div>
   );
 }

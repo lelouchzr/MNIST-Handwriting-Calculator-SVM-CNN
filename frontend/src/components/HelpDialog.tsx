@@ -59,8 +59,10 @@ export function HelpDialog({
                 each symbol. Scores are model estimates, not guarantees. You can
                 also type the entire expression. Use Inspect or select a
                 numbered box to see the input pixels, all class scores and a
-                masking sensitivity map. Turn off Segments to draw over a
-                detected box.
+                masking sensitivity map. The inspector sits beside your drawing
+                on desktop and opens as a panel on mobile. Use the arrows to
+                move between symbols; close it with the × button or Escape. Turn
+                off Segments to draw over a detected box.
               </p>
             </div>
           </li>
