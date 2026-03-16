@@ -1,10 +1,8 @@
-import type { Ref } from "react";
 import { ArrowRight, ArrowUp } from "@phosphor-icons/react";
 import type { HistoryEntry } from "../types";
 import { displayExpression } from "./ResultPanel";
 
 type Props = {
-  ref: Ref<HTMLElement>;
   entries: HistoryEntry[];
   expanded: boolean;
   onExpand: () => void;
@@ -14,7 +12,6 @@ type Props = {
 };
 
 export function HistoryPanel({
-  ref,
   entries,
   expanded,
   onExpand,
@@ -26,7 +23,6 @@ export function HistoryPanel({
   return (
     <section
       id="history"
-      ref={ref}
       className="history-panel"
       tabIndex={-1}
       aria-labelledby="history-title"

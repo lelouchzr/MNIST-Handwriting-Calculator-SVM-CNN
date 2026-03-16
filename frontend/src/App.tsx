@@ -30,7 +30,6 @@ export default function App() {
   const [showSegmentation, setShowSegmentation] = useState(true);
   const inspectButton = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const history = useRef<HTMLElement>(null);
   const drawing = useRef<HTMLElement>(null);
   const { ink, expression, tokens, busy } = workspace;
 
@@ -94,13 +93,6 @@ export default function App() {
     );
   }
 
-  function revealHistory() {
-    setShowHistory(true);
-    requestAnimationFrame(() => {
-      history.current?.scrollIntoView({ behavior: "auto", block: "nearest" });
-      history.current?.focus({ preventScroll: true });
-    });
-  }
   function append(symbol: string) {
     const start = input.current?.selectionStart ?? expression.length;
     const end = input.current?.selectionEnd ?? start;
@@ -132,7 +124,6 @@ export default function App() {
           <a className="active" href="#workspace" aria-current="page">
             Workspace
           </a>
-          <button onClick={revealHistory}>History</button>
         </nav>
         <div className="header-utilities">
           <button className="help-trigger" onClick={() => setHelpOpen(true)}>
@@ -420,7 +411,6 @@ export default function App() {
               busy={busy === "calculate"}
             />
             <HistoryPanel
-              ref={history}
               entries={workspace.history}
               expanded={showHistory}
               onExpand={() => setShowHistory(!showHistory)}

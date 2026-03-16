@@ -114,8 +114,7 @@ main {
   gap: 28px;
   margin-left: 100px;
 }
-.main-nav a,
-.main-nav button {
+.main-nav a {
   display: flex;
   align-items: center;
   position: relative;
@@ -125,8 +124,7 @@ main {
   font-size: 15px;
   color: var(--muted);
 }
-.main-nav a:hover,
-.main-nav button:hover {
+.main-nav a:hover {
   color: var(--ink);
 }
 .main-nav .active {
@@ -1112,8 +1110,7 @@ kbd {
     gap: 25px;
     height: 45px;
   }
-  .main-nav a,
-  .main-nav button {
+  .main-nav a {
     padding: 0 1px 10px;
     font-size: 14px;
   }
