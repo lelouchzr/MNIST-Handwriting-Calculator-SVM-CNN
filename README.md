@@ -6,7 +6,7 @@ prediction, correct ambiguous symbols, and calculate without running arbitrary c
 Python handles image preparation, classification and arithmetic. React handles the
 canvas, editable predictions and browser-local calculation history.
 
-![InkCalc recognition inspector](docs/inspector-explanation.jpg)
+![InkCalc with the inspection dock beside the drawing](docs/inspector-dock.png)
 
 ## Development
 
@@ -61,6 +61,18 @@ a duplicate calculation.
 Recognize a drawing, then choose **Inspect** or click a numbered detection box.
 Use the Symbol selector to switch between detected characters.
 
+At desktop widths (1,100 px and above), Inspect opens in a dock beside the drawing.
+The drawing remains interactive and the details scroll independently. On smaller
+screens, the same inspector opens in a modal bottom panel with a backdrop, focus
+containment and scroll locking. Use the previous/next buttons or the Symbol selector
+to move through the drawing. Closing restores focus to the opening control.
+
+If you edit the drawing while inspecting on desktop, the dock stays in place and
+asks you to recognize again. This keeps the canvas width stable under the pen and
+discards outdated predictions and explanations. Resizing preserves the selected
+symbol and active tab. Base UI provides Dialog and Tabs behavior; the existing CSS
+defines the appearance.
+
 - **Input** shows the raster crop, its dimensions, and the normalized 28 × 28 input.
 - **Predictions** shows all 16 class scores in descending order: calibrated
   probabilities for the SVM, uncalibrated softmax scores for the CNN.
@@ -96,10 +108,8 @@ Higher confidence alone does not identify the better model. The synthetic challe
 is an original example selected to explore disagreement, not an accuracy benchmark.
 All predictions and maps are calculated by the actual committed models.
 
-![SVM and CNN explain different predictions on the same synthetic input](docs/model-comparison.png)
-
-The two maps appear side by side on desktop and stack on
-[mobile](docs/model-comparison-mobile.png).
+Both explanation maps stack inside the inspector and use one color scale. See the
+[mobile inspection panel](docs/inspector-mobile-panel.png).
 
 The CNN has two convolutional layers and 79,104 parameters, trained for eight fixed
 epochs on the same 23,900 normalized training inputs as the SVM. Both weight files
@@ -136,7 +146,8 @@ The backend tests cover arithmetic limits, bad API requests, stroke grouping and
 real-model symbol classification, model availability, comparison and masking
 explanations. Frontend tests cover corrupt or unavailable browser storage,
 persistence, the history limit and switching the expression source without
-changing the original predictions.
+changing the original predictions, modal focus containment, dismissal, keyboard
+tabs and preserving inspection state across responsive breakpoints.
 
 ## Layout
 

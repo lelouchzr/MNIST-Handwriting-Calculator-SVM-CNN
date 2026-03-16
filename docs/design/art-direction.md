@@ -68,3 +68,38 @@ system, with two-line header/navigation, 16 px-equivalent gutters, usable canvas
 four character tiles in one row, adjacent expression/action, seven operator keys,
 horizontal result band and history below. Preserve readable text and touch spacing;
 do not shrink the desktop composition into a phone image.
+
+## Responsive inspection panel
+
+The later inspection change uses two fresh generated references:
+`inspector-desktop-reference.png` and `inspector-mobile-reference.png`. The mobile
+reference was generated separately rather than cropped from desktop.
+
+The desktop reference gives the drawing about two thirds of the screen and the
+inspector one third, separated by a straight vertical rule. Its compact header,
+close control, symbol navigation and three equal tabs establish the hierarchy.
+The implementation uses a 400–480 px dock, 20 px internal gutters, 44 px controls
+and its own scrolling content area. The working area reserves the dock width;
+calculation and history continue below the drawing while inspection is open.
+
+The mobile reference keeps the same type, colors and tab treatment in a bottom
+panel above a subdued backdrop. The implementation retains the existing square
+corners and uses up to 90dvh with safe-area padding. The header and navigation stay
+visible while details scroll. Short landscape screens use a compact header.
+
+The references are layout guides, not classifier evidence: the implementation
+keeps real input pixels, measured scores and signed masking legends. It does not
+copy the reference's glowing pixel treatment or its inaccurate influence wording.
+The existing navigation, English copy and result behavior remain authoritative.
+
+Base UI Dialog supplies the interaction shell: a non-modal dock at 1100 px and
+above, a modal panel below that breakpoint, with dismissal, scroll locking and
+focus handling. Base UI Tabs replaces both custom keyboard-navigation handlers.
+The selected symbol and active tab survive breakpoint changes. Reduced-motion
+preferences disable panel and backdrop transitions. CSS defines all visual styles;
+no Tailwind or additional visual theme is required.
+
+Editing the drawing leaves the dock open with a recognition-needed state. This
+keeps canvas geometry stable under an active pointer, unmounts obsolete detail
+views and aborts their pending explanation requests. The next recognition selects
+the first new symbol. Closing the dock returns the normal working layout.
