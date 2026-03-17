@@ -2,17 +2,17 @@
 
 import base64
 import pickle
-from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 
 import joblib
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 
 from inkcalc.cnn import CNN_PATH, CNNClassifier
 from inkcalc.explanation import occlusion_sensitivity
 from inkcalc.features import features_from_pixels, normalize
+from inkcalc.segmentation import segment_strokes
 
 MODEL_PATH = Path(__file__).resolve().parents[2] / "models" / "symbols.joblib"
 DISPLAY = {"*": "×", "/": "÷", "-": "−"}
@@ -20,17 +20,6 @@ DISPLAY = {"*": "×", "/": "÷", "-": "−"}
 
 class ModelUnavailableError(ValueError):
     """The requested classifier is missing or could not be loaded."""
-
-
-@dataclass
-class Segment:
-    image: Image.Image
-    box: list[float]
-
-    @property
-    def is_point(self) -> bool:
-        left, top, right, bottom = self.box
-        return max(right - left, bottom - top) < 12
 
 
 def png_data(image: Image.Image) -> str:
@@ -128,44 +117,7 @@ class Recognizer:
             "score_kind": "rule" if is_point else score_kind,
         }
 
-    @staticmethod
-    def segment(strokes: list[list[tuple[float, float]]]) -> list[Segment]:
-        bounded = []
-        for stroke in strokes:
-            xs, ys = zip(*stroke, strict=True)
-            bounded.append({"points": stroke, "box": [min(xs), min(ys), max(xs), max(ys)]})
-        bounded.sort(key=lambda item: item["box"][0])
-        groups: list[dict] = []
-        for item in bounded:
-            box = item["box"]
-            # Merge overlapping x-ranges, including disconnected '+' and '÷' strokes.
-            if groups and box[0] <= groups[-1]["box"][2] + 7:
-                group = groups[-1]
-                group["strokes"].append(item["points"])
-                group["box"] = [
-                    min(group["box"][0], box[0]),
-                    min(group["box"][1], box[1]),
-                    max(group["box"][2], box[2]),
-                    max(group["box"][3], box[3]),
-                ]
-            else:
-                groups.append({"strokes": [item["points"]], "box": box.copy()})
-        if len(groups) > 64:
-            raise ValueError("Limit the expression to 64 symbols.")
-        segments = []
-        for group in groups:
-            left, top, right, bottom = group["box"]
-            image = Image.new("L", (max(1, int(right - left)) + 16, max(1, int(bottom - top)) + 16))
-            draw = ImageDraw.Draw(image)
-            for stroke in group["strokes"]:
-                points = [(x - left + 8, y - top + 8) for x, y in stroke]
-                if len(points) == 1:
-                    x, y = points[0]
-                    draw.ellipse((x - 3, y - 3, x + 3, y + 3), fill=255)
-                else:
-                    draw.line(points, fill=255, width=6, joint="curve")
-            segments.append(Segment(image, group["box"]))
-        return segments
+    segment = staticmethod(segment_strokes)
 
     def recognize(
         self, strokes: list[list[tuple[float, float]]], model_id: str = "svm"

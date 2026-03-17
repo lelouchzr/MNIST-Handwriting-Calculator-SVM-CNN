@@ -191,6 +191,8 @@ dependencies = [
     { name = "pillow" },
     { name = "scikit-image" },
     { name = "scikit-learn" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "torch", version = "2.15.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
     { name = "torch", version = "2.15.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
     { name = "uvicorn" },
@@ -211,6 +213,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=11,<13" },
     { name = "scikit-image", specifier = ">=0.25,<1" },
     { name = "scikit-learn", specifier = ">=1.6,<2" },
+    { name = "scipy", specifier = ">=1.15,<2" },
     { name = "torch", specifier = ">=2.15,<3", index = "https://download.pytorch.org/whl/cpu" },
     { name = "uvicorn", specifier = ">=0.34,<1" },
 ]
