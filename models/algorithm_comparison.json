@@ -1,0 +1,212 @@
+{
+  "protocol": {
+    "seed": 90210,
+    "fingerprint": "13f58a15e46182868b7abbd98c23f164303fdd07ccb5a18b7d1f513f4642d757",
+    "baseline_revision": "200719072ee4fc0463abc31b89973fa0fb80c6b2",
+    "segmentation_match": "ordered count and per-box IoU >= 0.5, bounds padded 3px",
+    "limitations": "Pen digits/operators/expressions are synthetic, not human validation.",
+    "test_policy": "Fixed final evaluation; not used for checkpoint selection."
+  },
+  "models": {
+    "svm": {
+      "mnist_digits": {
+        "samples": 10000,
+        "before": 0.9682,
+        "after": 0.9737,
+        "delta_percentage_points": 0.550000000000006
+      },
+      "pen_digits": {
+        "samples": 1000,
+        "before": 0.989,
+        "after": 1.0,
+        "delta_percentage_points": 1.100000000000001
+      },
+      "pen_operators": {
+        "samples": 1200,
+        "before": 0.9966666666666667,
+        "after": 0.9983333333333333,
+        "delta_percentage_points": 0.1666666666666594
+      },
+      "expressions_all": {
+        "samples": 240,
+        "before": 0.6208333333333333,
+        "after": 0.9833333333333333,
+        "delta_percentage_points": 36.24999999999999
+      },
+      "expressions_broken": {
+        "samples": 40,
+        "before": 0.95,
+        "after": 0.925,
+        "delta_percentage_points": -2.499999999999991
+      },
+      "expressions_decimal": {
+        "samples": 40,
+        "before": 0.0,
+        "after": 1.0,
+        "delta_percentage_points": 100.0
+      },
+      "expressions_division": {
+        "samples": 40,
+        "before": 0.825,
+        "after": 1.0,
+        "delta_percentage_points": 17.500000000000004
+      },
+      "expressions_slanted": {
+        "samples": 40,
+        "before": 0.975,
+        "after": 0.975,
+        "delta_percentage_points": 0.0
+      },
+      "expressions_spaced": {
+        "samples": 40,
+        "before": 0.975,
+        "after": 1.0,
+        "delta_percentage_points": 2.500000000000002
+      },
+      "expressions_tight": {
+        "samples": 40,
+        "before": 0.0,
+        "after": 1.0,
+        "delta_percentage_points": 100.0
+      }
+    },
+    "cnn": {
+      "mnist_digits": {
+        "samples": 10000,
+        "before": 0.9753,
+        "after": 0.9884,
+        "delta_percentage_points": 1.31
+      },
+      "pen_digits": {
+        "samples": 1000,
+        "before": 0.984,
+        "after": 1.0,
+        "delta_percentage_points": 1.6000000000000014
+      },
+      "pen_operators": {
+        "samples": 1200,
+        "before": 0.9508333333333333,
+        "after": 0.9975,
+        "delta_percentage_points": 4.666666666666675
+      },
+      "expressions_all": {
+        "samples": 240,
+        "before": 0.5875,
+        "after": 0.9875,
+        "delta_percentage_points": 40.0
+      },
+      "expressions_broken": {
+        "samples": 40,
+        "before": 0.925,
+        "after": 0.925,
+        "delta_percentage_points": 0.0
+      },
+      "expressions_decimal": {
+        "samples": 40,
+        "before": 0.0,
+        "after": 1.0,
+        "delta_percentage_points": 100.0
+      },
+      "expressions_division": {
+        "samples": 40,
+        "before": 0.8,
+        "after": 1.0,
+        "delta_percentage_points": 19.999999999999996
+      },
+      "expressions_slanted": {
+        "samples": 40,
+        "before": 0.875,
+        "after": 1.0,
+        "delta_percentage_points": 12.5
+      },
+      "expressions_spaced": {
+        "samples": 40,
+        "before": 0.925,
+        "after": 1.0,
+        "delta_percentage_points": 7.499999999999996
+      },
+      "expressions_tight": {
+        "samples": 40,
+        "before": 0.0,
+        "after": 1.0,
+        "delta_percentage_points": 100.0
+      }
+    }
+  },
+  "segmentation": {
+    "before": {
+      "all": {
+        "correct": 160,
+        "samples": 240,
+        "accuracy": 0.6666666666666666
+      },
+      "broken": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      },
+      "decimal": {
+        "correct": 0,
+        "samples": 40,
+        "accuracy": 0.0
+      },
+      "division": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      },
+      "slanted": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      },
+      "spaced": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      },
+      "tight": {
+        "correct": 0,
+        "samples": 40,
+        "accuracy": 0.0
+      }
+    },
+    "after": {
+      "all": {
+        "correct": 237,
+        "samples": 240,
+        "accuracy": 0.9875
+      },
+      "broken": {
+        "correct": 37,
+        "samples": 40,
+        "accuracy": 0.925
+      },
+      "decimal": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      },
+      "division": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      },
+      "slanted": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      },
+      "spaced": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      },
+      "tight": {
+        "correct": 40,
+        "samples": 40,
+        "accuracy": 1.0
+      }
+    }
+  }
+}

@@ -20,9 +20,20 @@ def test_committed_models_use_identical_train_and_test_inputs():
     svm = json.loads((ROOT / "models/metrics.json").read_text())
     cnn = json.loads((ROOT / "models/cnn_metrics.json").read_text())
     comparison = json.loads((ROOT / "models/comparison.json").read_text())
-    for key in ("training_inputs_sha256", "evaluation_inputs_sha256"):
+    for key in (
+        "training_inputs_sha256",
+        "validation_inputs_sha256",
+        "evaluation_inputs_sha256",
+    ):
         assert svm[key] == cnn[key] == comparison[key]
-    assert svm["mnist_train_samples"] == cnn["mnist_train_samples"] == 20000
+    for key, count in {
+        "mnist_train_samples": 40000,
+        "mnist_augmented_samples": 40000,
+        "training_samples": 91700,
+        "validation_samples": 5900,
+        "mnist_test_samples": 10000,
+    }.items():
+        assert svm[key] == cnn[key] == count
     assert cnn["score_kind"] == "uncalibrated_softmax"
     assert svm["score_kind"] == "calibrated_probability"
 

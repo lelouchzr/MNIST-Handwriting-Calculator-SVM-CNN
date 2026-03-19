@@ -8,6 +8,7 @@ import joblib
 import numpy as np
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.svm import LinearSVC
 from training_data import prepare_data
 
@@ -18,24 +19,27 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--digits", type=int, default=20000)
+    parser.add_argument("--digits", type=int, default=40000)
     args = parser.parse_args()
-    if not 1000 <= args.digits <= 60000:
-        parser.error("--digits must be between 1000 and 60000")
-    pixels, y, test, test_y, metadata = prepare_data(args.digits)
-    x = np.asarray([features_from_pixels(image) for image in pixels])
-    test_x = np.asarray([features_from_pixels(image) for image in test])
-    print("Fitting calibrated linear SVM…", flush=True)
-    model = CalibratedClassifierCV(LinearSVC(C=2, dual="auto", random_state=42), cv=3)
-    model.fit(x, y)
-    predictions = model.predict(test_x)
+    if not 1000 <= args.digits <= 55000:
+        parser.error("--digits must be between 1000 and 55000")
+    data = prepare_data(args.digits)
+    metadata = data.metadata.copy()
+    x = np.asarray([features_from_pixels(image) for image in data.pixels])
+    validation_x = np.asarray([features_from_pixels(image) for image in data.validation])
+    folds = list(
+        StratifiedGroupKFold(3, shuffle=True, random_state=42).split(x, data.labels, data.groups)
+    )
+    print("Fitting source-group-calibrated linear SVM…", flush=True)
+    model = CalibratedClassifierCV(LinearSVC(C=2, dual="auto", random_state=42), cv=folds)
+    model.fit(x, data.labels)
     metadata.update(
         {
-            "name": "MNIST + synthetic operators / HOG + calibrated linear SVM",
+            "name": "Augmented MNIST + procedural pen paths / HOG + calibrated linear SVM",
             "score_kind": "calibrated_probability",
-            "mnist_test_accuracy": float(accuracy_score(test_y[:2000], predictions[:2000])),
-            "synthetic_operator_test_accuracy": float(
-                accuracy_score(test_y[2000:], predictions[2000:])
+            "calibration": "3 sigmoid folds, original and augmented source groups kept together",
+            "validation_accuracy": float(
+                accuracy_score(data.validation_labels, model.predict(validation_x))
             ),
         }
     )
