@@ -2,126 +2,136 @@
 
 ## Scope and provenance
 
-InkCalc recognizes isolated handwritten digits and arithmetic symbols on one line.
-It does not implement general mathematical OCR, fractions, superscripts, touching
-characters or multi-line expressions.
+Single-line handwritten digits and `+ - * / ( )`, with geometric decimal detection.
+No general mathematical OCR, fractions, superscripts, multiline layout or reliable
+separation of touching characters.
 
-The implementation, original pen paths and synthetic operator generator are written
-for InkCalc. Inspiration: [Youjia Zhang's calculator](https://github.com/YoujiaZhang/MNIST-Calculator-Handwriting-recognition).
-No upstream notebook code, images, extended dataset archive or weights are included.
+InkCalc's code, pen paths and synthetic drawing routines are independent. The project
+was inspired by [Youjia Zhang's calculator](https://github.com/YoujiaZhang/MNIST-Calculator-Handwriting-recognition);
+no upstream notebooks, images, extended dataset archive or weights are included.
 
-Digits use [MNIST](https://yann.lecun.com/exdb/mnist/), credited to Yann LeCun,
-Corinna Cortes and Christopher J. C. Burges, through the
+[MNIST](https://yann.lecun.com/exdb/mnist/), by Yann LeCun, Corinna Cortes and
+Christopher J. C. Burges, is fetched from the
 [Keras mirror](https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz).
-The archive checksum is verified before use. `scripts/training_data.py` generates
-operators using original drawing routines and supplies the shared data to both trainers.
+Archive SHA-256: `731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1`.
 
-## Shared input and models
+## Segmentation and input
 
-1. Group pen strokes by horizontal overlap/proximity and rasterize each group.
-2. Crop to the ink, fit within 20 × 20 pixels, and center by mass on a 28 × 28 frame.
-3. **SVM:** extract 324 HOG features (9 orientations, 7 × 7 cells, 2 × 2 blocks),
-   then predict with a linear SVM and three-fold sigmoid calibration.
-4. **CNN:** use the same normalized pixels directly with Conv(1→12, 3 × 3), ReLU,
-   max-pool, Conv(12→24, 3 × 3), ReLU, max-pool, a 64-unit fully connected layer,
-   dropout 0.2 and 16 logits. This original network has 79,104 parameters.
+| Step | Implementation |
+| --- | --- |
+| Initial groups | Rasterize thin centerlines and label 8-connected components. Overlapping x ranges alone no longer merge adjacent symbols. |
+| Gap repair | Join aligned detached pieces and compatible outward endpoint tangents within bounded gaps. Preserve separate short minus signs. |
+| Division | Combine an aligned small dot above and below a horizontal bar; one nearby decimal is insufficient. |
+| Decimal | A compact mark below 12 logical pixels, excluding elongated short lines, bypasses both classifiers. |
+| Raster | Supersample at 3× with rounded endpoints, then downsample. |
+| Normalize | Crop ink, fit within 20 × 20, center by mass on a 28 × 28 frame. |
 
-Marks smaller than twelve logical pixels use a geometric decimal-point rule.
-Neither model supplies a probability or sensitivity map for those marks. The
-canvas has 1,000 logical pixels across and preserves aspect ratio on phones.
+Canvas coordinates span 1,000 logical pixels. Segmentation uses geometry and fixed
+thresholds, not a learned detector. It preserves stroke-order independence. Broken
+strokes remain a failure mode; three final cases regress despite the overall gain.
 
-## Recorded evaluation
+## Classifiers and training
 
-Both models use the same 20,000 MNIST training digits and 3,900 generated operators
-(650 per class), with seed 42. The CNN trains on CPU for eight fixed epochs with
-Adam (learning rate 0.001), batch size 128. Held-out tests are evaluated only after
-training and do not select an epoch or checkpoint.
+Both models receive identical normalized arrays and labels.
 
-| Evaluation set | Samples | SVM accuracy | CNN accuracy |
+| Item | SVM | CNN |
+| --- | --- | --- |
+| Input | 324 HOG features: 9 orientations, 7 × 7 cells, 2 × 2 blocks | 28 × 28 grayscale pixels |
+| Classifier | LinearSVC, C=2 | Conv(1→12, 3×3), ReLU, pool; Conv(12→24, 3×3), ReLU, pool; FC64, dropout 0.2, FC16 |
+| Scores | Three-fold sigmoid-calibrated probabilities | Uncalibrated softmax |
+| Fitting | Stratified group folds keep original and augmented variants together | Adam, lr 0.001, batch 128, StepLR at epoch 8 ×0.3 |
+| Selection | Fixed settings | Best validation accuracy, epoch 11 of 12 |
+| Validation accuracy, mixed 5,900 inputs | 97.32% | 98.61% |
+
+The CNN has 79,104 parameters. CPU execution, seed 42 and the lockfile aid
+reproducibility; floating-point results can vary across platforms.
+
+| Shared dataset | Samples |
+| --- | ---: |
+| MNIST training originals | 40,000 |
+| One affine variant per original | 40,000 |
+| Procedural pen digits | 4,500 |
+| Synthetic operators: legacy raster + pen paths | 7,200 |
+| **Training total** | **91,700** |
+| Separate validation: MNIST training split / pen digits / operators | 5,000 / 300 / 600 |
+
+Affine augmentation adds rotation about ±9°, shear ±0.10, scale 0.94–1.06,
+translation ±0.65 pixels and occasional dilation. Validation uses seed 7301 and
+unused MNIST training indices. No official MNIST test digit enters training or
+checkpoint selection. Original/variant group IDs prevent calibration leakage.
+
+## Frozen before/after protocol
+
+Baseline revision: `200719072ee4fc0463abc31b89973fa0fb80c6b2`. The benchmark extracts
+its recognition module and weight files with `git show`. HOG, normalization and CNN
+architecture are unchanged, so both revisions use the same inference primitives.
+
+Final seed: **90210**. Segmentation parameters were developed separately on seed
+1701. Final results were run after training and were not used for checkpoint
+selection or subsequent threshold tuning.
+
+| Evaluation input | Samples | SVM before → after | CNN before → after |
 | --- | ---: | ---: | ---: |
-| First 2,000 MNIST test digits, all classes eligible | 2,000 | 95.65% | 96.65% |
-| Fresh synthetic operators, all classes eligible | 600 | 99.33% | 99.50% |
+| Entire official MNIST test split | 10,000 | 96.82 → 97.37% | 97.53 → 98.84% |
+| Procedural isolated pen digits | 1,000 | 98.90 → 100.00% | 98.40 → 100.00% |
+| Procedural isolated operators | 1,200 | 99.67 → 99.83% | 95.08 → 99.75% |
+| Exact procedural expressions | 240 | 62.08 → 98.33% | 58.75 → 98.75% |
+| Expression character error rate | 960 characters | 35.625 → 0.729% | 38.125 → 0.729% |
 
-The ordered training and test input arrays, including labels, have matching SHA-256
-fingerprints stored in `models/metrics.json`, `models/cnn_metrics.json` and
-`models/comparison.json`. Agreement is 95.35% on test digits and 99.50% on synthetic
-operators. Model accuracy and agreement are different quantities.
+Isolated classification allows all 16 classes. Expression accuracy compares the
+entire recognized string, before arithmetic evaluation, without correction.
+Character error rate uses Levenshtein edits divided by expected characters.
 
-These are symbol classification results, not complete-expression accuracy. The
-operator evaluation uses the same synthetic drawing family as training and does not
-validate human-written operators. No real operator or segmentation benchmark is included.
+Each expression profile has 40 cases: spaced, tight, decimal, division, interrupted
+and slanted. Expected boxes come from the known pen paths. Segmentation success
+requires an identical ordered segment count and each box's IoU ≥ 0.5, after padding
+bounds by three pixels to handle lines and points.
 
-SVM scores are calibrated probabilities. CNN scores are **uncalibrated softmax
-estimates**. A larger confidence number does not establish which model is better;
-use held-out accuracy and inspect actual disagreements. Neither model is guaranteed
-correct on drawings outside its training distribution.
+| Segmentation | Before | After |
+| --- | ---: | ---: |
+| Spaced / division / slanted | 120/120 | 120/120 |
+| Tight | 0/40 | 40/40 |
+| Decimal | 0/40 | 40/40 |
+| Interrupted | 40/40 | 37/40 |
+| Total | 160/240 | 237/240 |
 
-## Reproduce
+This measures the combined update; it is not an ablation separating augmentation,
+training volume, rasterization and grouping effects. Synthetic digits, operators
+and expressions share a generator family with training. Their high scores do not
+establish accuracy on new human-written operators or full expressions. MNIST tests
+human digits only. The previous 2,000-digit headline used a different slice and
+must not be compared directly with this 10,000-digit evaluation.
 
-```sh
-uv sync --locked
-uv run python scripts/train.py --digits 20000
-uv run python scripts/train_cnn.py --digits 20000 --epochs 8
-uv run pytest
-```
+## Reproduction and artifacts
 
-The first training run downloads about 11 MB of MNIST data into ignored `.cache/`.
-Both trained artifacts are committed, so normal startup needs no dataset or weight
-download. PyTorch uses a dedicated CPU package index. GPU support is not required.
-The seed, package lock and CPU execution aid reproducibility; floating-point behavior
-can still vary across platforms.
+Follow the training and benchmark commands in the [README](../README.md). A full
+Git checkout must contain the baseline revision. Both weight files are committed;
+normal startup needs no download. Only load trusted joblib artifacts. CNN loading
+uses a state dictionary with `weights_only=True` on CPU. Missing or corrupt models
+are marked unavailable; requests return 503 instead of silently switching models.
 
-Only load the trusted repository artifacts. The SVM uses joblib. The CNN stores a
-state dictionary and primitive metadata, loaded on CPU with
-[`torch.load(..., weights_only=True)`](https://docs.pytorch.org/docs/stable/generated/torch.load.html).
-No model upload endpoint is provided. Missing/corrupt models are marked unavailable;
-a request for an unavailable model returns 503 rather than silently using another.
+| Record | Location |
+| --- | --- |
+| Training / validation metadata and input hashes | `models/metrics.json`, `models/cnn_metrics.json` |
+| Per-epoch loss and validation accuracy | `models/training_history.json` |
+| Raw predictions, confusions, per-expression results | `models/algorithm_before.json`, `models/algorithm_after.json` |
+| Before/after scores and per-profile segmentation | `models/algorithm_comparison.json` |
+| Current SVM/CNN comparison | `models/comparison.json` |
 
-## Recognition and inspection API
+Final input fingerprint:
+`13f58a15e46182868b7abbd98c23f164303fdd07ccb5a18b7d1f513f4642d757`.
+The benchmark refuses to compare mismatched protocols or input fingerprints.
 
-`POST /api/recognize` accepts bounded strokes plus `model: "svm" | "cnn" | "compare"`
-(default `svm`). It returns the raster crop, normalized input preview, original
-prediction, all 16 scores, scoring method and per-model outputs. Compare segments
-and normalizes once, then passes the same pixels to both models. Decimal marks are
-excluded from the agreement count.
+## Inspection semantics
 
-Compare initially uses the SVM expression. Explicitly selecting the CNN expression
-updates editable labels and displayed source scores, while preserving both original
-model outputs. Manual corrections also leave the recorded predictions unchanged.
+`POST /api/recognize` segments and normalizes once, then supplies the same pixels
+to SVM and CNN in Compare mode. Choosing an expression source or manually correcting
+a symbol preserves both original model predictions. Decimal rules have no class
+probabilities and are excluded from classifier agreement.
 
-`POST /api/explain` accepts the same model selection and a zero-based `symbol_index`.
-Each classifier explains its own top class; no client-supplied label chooses a target.
-The normalized floating-point frame stays fixed while each overlapping 5 × 5 window
-is set to zero. The SVM recomputes HOG without recentering; the CNN consumes the masked
-pixels directly in bounded inference batches of 64, with evaluation mode and no gradients.
-
-For class c, a window's signed effect is `score(c | original) - score(c | masked)`.
-Each displayed pixel averages the effects of all covering windows, including borders.
-There are 576 windows per model. Zero-effect maps remain zero without normalization errors.
-
-Yellow means masking lowered the class score; hatching means it raised it. Single-model
-maps use a per-symbol color scale. Compare uses one shared magnitude scale across both
-maps, with target class and original score labelled separately. Values are percentage-point
-changes in different score functions, not directly comparable measures of correctness.
-This is sensitivity to perturbations, not causal attribution. Masking can create inputs
-outside the training distribution. PNG previews quantize to eight bits; model inference
-and sensitivity retain the normalized float values.
-
-## Demonstration example
-
-The "Synthetic example" action uses an original jittered pen path selected to
-illustrate a disagreement in the committed models. It is explicitly a synthetic demo,
-not an accuracy benchmark or an additional held-out evaluation set. Predictions and
-maps are always computed by the actual models. Retrained models may agree on this example.
-
-## Limits and privacy
-
-- Leave space between characters; overlapping horizontal bounds can merge symbols.
-- Use one-line mouse, finger or stylus input; photographs are not supported.
-- Arithmetic is bounded to 256 input characters and magnitude 10¹⁵; display rounds
-  to 12 decimals. Parentheses, precedence, negatives and decimal commas are supported.
-- Only 20 calculation results are stored in browser history. Drawings and model
-  explanations stay in transient memory; closing inspection or changing the drawing
-  discards its explanation cache.
-- In the documented local setup, handwriting is sent only to the local Python API.
-  Hosting that API elsewhere changes where handwriting is processed.
+`POST /api/explain` explains each model's own top class with 576 overlapping 5 × 5
+zero masks on the fixed normalized input. Signed effect is
+`score(original class | input) − score(original class | masked input)`; each pixel
+averages effects from covering windows. Compare maps share one color scale.
+This is local sensitivity, not causality or proof of correctness. Masked inputs
+may be outside the training distribution. CNN confidence remains uncalibrated.

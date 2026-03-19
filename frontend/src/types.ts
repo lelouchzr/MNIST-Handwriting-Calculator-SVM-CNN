@@ -27,6 +27,7 @@ export type ModelStatus = {
   score_kind: string;
   metrics: {
     mnist_test_accuracy?: number;
+    mnist_test_samples?: number;
     synthetic_operator_test_accuracy?: number;
   };
   error?: string | null;

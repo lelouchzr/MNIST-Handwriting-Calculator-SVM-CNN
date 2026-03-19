@@ -41,6 +41,10 @@ export function ModelComparison({
 }: Props) {
   const compared = tokens.filter((item) => item.agreement !== null);
   const different = compared.filter((item) => !item.agreement).length;
+  const samples = health?.models.svm?.metrics.mnist_test_samples;
+  const sharedSamples =
+    samples !== undefined &&
+    samples === health?.models.cnn?.metrics.mnist_test_samples;
   return (
     <section className="comparison-panel" aria-labelledby="comparison-title">
       <div className="comparison-heading">
@@ -89,7 +93,9 @@ export function ModelComparison({
             </span>
           );
         })}
-        <span>MNIST test · 2,000 digits.</span>
+        {sharedSamples && (
+          <span>MNIST test · {samples.toLocaleString("en-US")} digits.</span>
+        )}
       </div>
       <table className="comparison-symbols">
         <caption className="sr-only">Per-symbol model predictions</caption>
