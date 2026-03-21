@@ -1,8 +1,42 @@
 """Geometric regressions independent of model weights or benchmark templates."""
 
+import json
+from pathlib import Path
+
+import numpy as np
 import pytest
+from segmentation_cases import junction_cases
 
 from inkcalc.segmentation import segment_strokes
+
+REGRESSIONS = json.loads((Path(__file__).parent / "fixtures/interrupted_strokes.json").read_text())
+JUNCTION_CASES = list(junction_cases())
+
+
+@pytest.mark.parametrize("case", REGRESSIONS, ids=lambda case: case["expression"])
+@pytest.mark.parametrize("scale", [0.85, 1.0, 1.15])
+@pytest.mark.parametrize("reverse", [False, True])
+def test_recorded_interrupted_ones_rejoin_without_merging_neighbors(case, scale, reverse):
+    strokes = [(np.asarray(stroke) * scale + 7.25).tolist() for stroke in case["strokes"]]
+    if reverse:
+        strokes = [stroke[::-1] for stroke in strokes[::-1]]
+    segments = segment_strokes(strokes)
+    assert len(segments) == len(case["boxes"])
+    np.testing.assert_allclose(
+        [segment.box for segment in segments], np.asarray(case["boxes"]) * scale + 7.25
+    )
+
+
+@pytest.mark.parametrize("profile", sorted({case["profile"] for case in JUNCTION_CASES}))
+def test_randomized_junctions_and_separate_neighbor_controls(profile):
+    for index, case in enumerate(JUNCTION_CASES):
+        if case["profile"] != profile:
+            continue
+        segments = segment_strokes(case["strokes"])
+        assert len(segments) == len(case["boxes"]), (profile, index)
+        np.testing.assert_allclose(
+            [segment.box for segment in segments], case["boxes"], err_msg=f"{profile}: {index}"
+        )
 
 
 def test_nearby_minuses_remain_distinct():

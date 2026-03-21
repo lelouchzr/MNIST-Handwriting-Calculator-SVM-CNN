@@ -119,6 +119,27 @@ def segment_strokes(strokes):
     parents = list(range(len(groups)))
     ends = [endpoints(group) for group in groups]
     gap_limit = min(10, max(4, height * 0.12))
+
+    def junction_anchor(i, j, start, direction, length):
+        """A third stroke can end in the missing section of a horizontal foot.
+
+        Require contact within the pen radius, inside the gap, and a transverse
+        endpoint on a tall component. Two neighboring minus signs lack this
+        junction evidence and must remain separate.
+        """
+        anchors = set()
+        for k, box in enumerate(group_boxes):
+            if k in (i, j) or box[3] - box[1] < height * 0.5:
+                continue
+            for point, tangent in ends[k]:
+                offset = point - start
+                along = np.dot(offset, direction)
+                across = np.linalg.norm(offset - along * direction)
+                if 0 <= along <= length and across <= 3 and abs(np.dot(tangent, direction)) < 0.35:
+                    anchors.add(k)
+        # Ambiguous contact with two separate glyphs is insufficient evidence.
+        return anchors.pop() if len(anchors) == 1 else None
+
     # Repair interrupted pen strokes only when both tangents continue across the gap.
     for i, a in enumerate(group_boxes):
         for j in range(i + 1, len(group_boxes)):
@@ -144,6 +165,40 @@ def segment_strokes(strokes):
                             and np.dot(tangent_b, -direction) > 0.9
                         ):
                             merge(i, j)
+    joined = {}
+    for index, group in enumerate(groups):
+        joined.setdefault(root(index), []).extend(group)
+    groups = list(joined.values())
+    group_boxes = [bounds(group) for group in groups]
+    parents = list(range(len(groups)))
+    ends = [endpoints(group) for group in groups]
+    # Rebuild components first: an interrupted stem may only now be a tall anchor.
+    # Keeping this as a separate pass makes contact evidence independent of pen order.
+    for i, a in enumerate(group_boxes):
+        for j in range(i + 1, len(group_boxes)):
+            b = group_boxes[j]
+            if max(a[3] - a[1], b[3] - b[1]) >= 4:
+                continue
+            if max(a[2], b[2]) - min(a[0], b[0]) > height * 1.15:
+                continue
+            if max(a[0], b[0]) - min(a[2], b[2]) > gap_limit:
+                continue
+            if max(a[1], b[1]) - min(a[3], b[3]) > gap_limit:
+                continue
+            for point_a, tangent_a in ends[i]:
+                for point_b, tangent_b in ends[j]:
+                    direction = point_b - point_a
+                    length = np.linalg.norm(direction)
+                    if 0 < length <= gap_limit:
+                        direction = direction / length
+                        if (
+                            np.dot(tangent_a, direction) > 0.9
+                            and np.dot(tangent_b, -direction) > 0.9
+                        ):
+                            anchor = junction_anchor(i, j, point_a, direction, length)
+                            if anchor is not None:
+                                merge(i, anchor)
+                                merge(i, j)
     joined = {}
     for index, group in enumerate(groups):
         joined.setdefault(root(index), []).extend(group)
