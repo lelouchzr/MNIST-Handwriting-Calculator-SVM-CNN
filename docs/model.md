@@ -20,15 +20,16 @@ Archive SHA-256: `731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673
 | Step | Implementation |
 | --- | --- |
 | Initial groups | Rasterize thin centerlines and label 8-connected components. Overlapping x ranges alone no longer merge adjacent symbols. |
-| Gap repair | Join aligned detached pieces and compatible outward endpoint tangents within bounded gaps. Preserve separate short minus signs. |
+| Gap repair | Join aligned detached pieces and compatible outward endpoint tangents within bounded gaps. Rebuild the stem, then repair a horizontal junction only with a unique transverse endpoint in the gap, within the 3 px pen radius. Preserve separate minus signs. |
 | Division | Combine an aligned small dot above and below a horizontal bar; one nearby decimal is insufficient. |
 | Decimal | A compact mark below 12 logical pixels, excluding elongated short lines, bypasses both classifiers. |
 | Raster | Supersample at 3× with rounded endpoints, then downsample. |
 | Normalize | Crop ink, fit within 20 × 20, center by mass on a 28 × 28 frame. |
 
 Canvas coordinates span 1,000 logical pixels. Segmentation uses geometry and fixed
-thresholds, not a learned detector. It preserves stroke-order independence. Broken
-strokes remain a failure mode; three final cases regress despite the overall gain.
+thresholds, not a learned detector. It preserves stroke-order independence. The
+three known interrupted-stroke regressions are now fixed; one case still fails
+in the fresh follow-up corpus described below.
 
 ## Classifiers and training
 
@@ -60,15 +61,16 @@ translation ±0.65 pixels and occasional dilation. Validation uses seed 7301 and
 unused MNIST training indices. No official MNIST test digit enters training or
 checkpoint selection. Original/variant group IDs prevent calibration leakage.
 
-## Frozen before/after protocol
+## Initial frozen before/after protocol
 
 Baseline revision: `200719072ee4fc0463abc31b89973fa0fb80c6b2`. The benchmark extracts
 its recognition module and weight files with `git show`. HOG, normalization and CNN
 architecture are unchanged, so both revisions use the same inference primitives.
 
 Final seed: **90210**. Segmentation parameters were developed separately on seed
-1701. Final results were run after training and were not used for checkpoint
-selection or subsequent threshold tuning.
+1701. These initial results were run after training without checkpoint selection
+or threshold tuning on the final data. The three failures later became explicit
+regression fixtures for the junction fix; this set is no longer an unseen test.
 
 | Evaluation input | Samples | SVM before → after | CNN before → after |
 | --- | ---: | ---: | ---: |
@@ -102,6 +104,42 @@ establish accuracy on new human-written operators or full expressions. MNIST tes
 human digits only. The previous 2,000-digit headline used a different slice and
 must not be compared directly with this 10,000-digit evaluation.
 
+## Junction fix and fresh validation
+
+The fix addresses interrupted horizontal feet whose vertical stem ends in the
+missing section. A separate pass first rebuilds interrupted stems, then requires
+aligned fragments and exactly one tall component ending transversely inside the
+gap. It retains the original gap limits and requires contact within the pen radius.
+No labels, case IDs or classifier confidence enter this geometric rule.
+
+Compared with revision `cb7a7317305ddaa9d9a6de865787bf42740b0761`, both model files
+are byte-identical. All isolated-symbol metrics and confusions reproduce exactly.
+
+| Corpus | Cases | Segmentation before → after | Exact SVM before → after | Exact CNN before → after |
+| --- | ---: | ---: | ---: | ---: |
+| Existing regression corpus | 240 | 237 → 240 | 236 → 239 | 237 → 240 |
+| Fresh expressions | 1,800 | 1,758 → 1,799 | 1,739 → 1,779 | 1,755 → 1,796 |
+| Independent geometric controls | 800 | 646 → 800 | — | — |
+
+Development uses the three saved failures and geometric probes with seed 424242.
+Fresh expression seeds **314159, 271828, 161803** each produce 600 cases; independent
+geometric controls use seed **515151**. They were evaluated after freezing the fix,
+with no further algorithm tuning on their outcomes. The geometry generator does
+not use the training digit templates: it covers top/bottom junctions, absent
+contact, adjacent minuses, parallel neighbors, decimals, interior contact and
+non-collinear fragments, with random scale, rotation, translation and stroke order.
+Negative controls include enough clearance to avoid physically connected ink.
+
+Paired checks reject any previously correct segmentation or exact prediction
+becoming incorrect, any per-expression edit-distance increase, and any per-profile
+character-error-rate increase. All checks pass. One fresh segmentation failure
+remains; these synthetic results still do not validate new human handwriting.
+
+Reproduce with the bundled weights and a checkout containing the previous release:
+`uv run python scripts/validate_segmentation.py`. The report records input
+fingerprints, model hashes, raw expression outcomes and every gained/lost case.
+The initial reports remain historical records of the first upgrade.
+
 ## Reproduction and artifacts
 
 Follow the training and benchmark commands in the [README](../README.md). A full
@@ -116,6 +154,7 @@ are marked unavailable; requests return 503 instead of silently switching models
 | Per-epoch loss and validation accuracy | `models/training_history.json` |
 | Raw predictions, confusions, per-expression results | `models/algorithm_before.json`, `models/algorithm_after.json` |
 | Before/after scores and per-profile segmentation | `models/algorithm_comparison.json` |
+| Junction fix, fresh corpora and paired regression guards | `models/segmentation_fix.json` |
 | Current SVM/CNN comparison | `models/comparison.json` |
 
 Final input fingerprint:

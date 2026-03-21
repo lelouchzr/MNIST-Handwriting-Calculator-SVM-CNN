@@ -32,7 +32,7 @@ scores are uncalibrated; a higher score alone does not identify the better model
 
 ## Before → after
 
-Identical final inputs, seed **90210**. Before uses revision
+Identical inputs, seed **90210** (now also used for regression tests). Before uses revision
 [`2007190`](https://github.com/lelouchzr/inkcalc/commit/200719072ee4fc0463abc31b89973fa0fb80c6b2).
 All 16 classes remain eligible during isolated-symbol evaluation.
 
@@ -41,7 +41,7 @@ All 16 classes remain eligible during isolated-symbol evaluation.
 | MNIST test digits | 10,000 | 96.82 → **97.37%** | 97.53 → **98.84%** |
 | Procedural pen digits | 1,000 | 98.90 → **100.00%** | 98.40 → **100.00%** |
 | Procedural operators | 1,200 | 99.67 → **99.83%** | 95.08 → **99.75%** |
-| Exact expressions, procedural | 240 | 62.08 → **98.33%** | 58.75 → **98.75%** |
+| Exact expressions, procedural | 240 | 62.08 → **99.58%** | 58.75 → **100.00%** |
 
 Segmentation requires the correct ordered symbol count and bounding-box IoU ≥ 0.5:
 
@@ -50,15 +50,25 @@ Segmentation requires the correct ordered symbol count and bounding-box IoU ≥ 
 | Tight spacing | 0/40 | 40/40 |
 | Decimal marks | 0/40 | 40/40 |
 | Division / spaced / slanted | 120/120 | 120/120 |
-| Interrupted strokes | 40/40 | 37/40 |
-| **All** | **160/240 (66.67%)** | **237/240 (98.75%)** |
+| Interrupted strokes | 40/40 | 40/40 |
+| **All** | **160/240 (66.67%)** | **240/240 (100.00%)** |
 
-Three interrupted-stroke cases regress. Procedural tests share a generator family
-with training and do **not** validate new human handwriting. MNIST is the held-out
-human-digit benchmark. Touching characters and multiline math remain unsupported.
+The three interrupted-stroke regressions are fixed using endpoint contact at a
+broken junction. Model weights and isolated-symbol scores are unchanged.
+
+| Follow-up validation against the previous release | Cases | Before fix → after fix |
+| --- | ---: | ---: |
+| Fresh expression segmentation, three unused seeds | 1,800 | 1,758 → **1,799** |
+| Fresh exact expressions, SVM / CNN | 1,800 | 1,739 / 1,755 → **1,779 / 1,796** |
+| Independent junction geometry and near-miss controls | 800 | 646 → **800** |
+
+No previously correct case was lost, and no expression gained character errors.
+One fresh segmentation case remains incorrect. Procedural tests do **not** validate
+new human handwriting; touching characters and multiline math remain unsupported.
 
 Raw cases, confusions and fingerprints: [before](models/algorithm_before.json),
-[after](models/algorithm_after.json), [comparison](models/algorithm_comparison.json).
+[initial upgrade](models/algorithm_after.json), [initial comparison](models/algorithm_comparison.json),
+[junction fix and fresh validation](models/segmentation_fix.json).
 Data provenance and protocol: [model card](docs/model.md).
 
 ## Training
@@ -83,6 +93,9 @@ uv run python scripts/train_cnn.py --digits 40000 --epochs 12
 uv run python scripts/benchmark.py --stage before
 uv run python scripts/benchmark.py --stage after
 ```
+
+Audit the junction fix against the committed previous release:
+`uv run python scripts/validate_segmentation.py`.
 
 Training downloads checksum-verified MNIST into ignored `.cache/`. Validation comes
 from the training split; final evaluation never selects the CNN checkpoint.
