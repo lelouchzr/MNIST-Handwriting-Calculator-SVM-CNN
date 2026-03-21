@@ -20,15 +20,15 @@ FRESH_SEEDS = (314159, 271828, 161803)
 JUNCTION_SEED = 515151
 
 
-def previous_segmenter():
+def previous_segmenter(revision=PREVIOUS):
     """Load the committed previous geometry without changing the current checkout."""
     source = subprocess.check_output(
-        ["git", "show", f"{PREVIOUS}:src/inkcalc/segmentation.py"], cwd=ROOT
+        ["git", "show", f"{revision}:src/inkcalc/segmentation.py"], cwd=ROOT
     )
-    path = ROOT / ".cache/segmentation-before-fix.py"
+    path = ROOT / f".cache/segmentation-{revision[:12]}.py"
     path.parent.mkdir(exist_ok=True)
     path.write_bytes(source)
-    spec = importlib.util.spec_from_file_location("segmentation_before_fix", path)
+    spec = importlib.util.spec_from_file_location(f"segmentation_{revision[:12]}", path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)

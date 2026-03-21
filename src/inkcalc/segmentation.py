@@ -68,7 +68,19 @@ def segment_strokes(strokes):
     grouped = {}
     for stroke, (x, y) in zip(strokes, starts, strict=True):
         grouped.setdefault(int(components[y, x]), []).append(stroke)
-    groups = list(grouped.values())
+    groups = []
+    for connected in grouped.values():
+        # Pixel rounding and 8-connectivity can bridge a real horizontal gap.
+        # Require continuous x support within the 3 px pen radius as well.
+        current, reach = [], -np.inf
+        for stroke in sorted(connected, key=lambda path: bounds([path])[0]):
+            box = bounds([stroke])
+            if current and box[0] - reach > 3:
+                groups.append(current)
+                current = []
+            current.append(stroke)
+            reach = max(reach, box[2])
+        groups.append(current)
     parents = list(range(len(groups)))
 
     def root(index):

@@ -11,6 +11,32 @@ from inkcalc.segmentation import segment_strokes
 
 REGRESSIONS = json.loads((Path(__file__).parent / "fixtures/interrupted_strokes.json").read_text())
 JUNCTION_CASES = list(junction_cases())
+TIGHT_DIGITS = json.loads((Path(__file__).parent / "fixtures/tight_digits.json").read_text())
+
+
+@pytest.mark.parametrize("scale", [0.85, 1.0, 1.15])
+@pytest.mark.parametrize("shift", [0.0, 0.25, 0.5, 0.75])
+def test_subpixel_translation_does_not_fuse_the_recorded_six_and_four(scale, shift):
+    strokes = [(np.asarray(stroke) * scale + shift).tolist() for stroke in TIGHT_DIGITS["strokes"]]
+    segments = segment_strokes(strokes)
+    assert len(segments) == len(TIGHT_DIGITS["boxes"])
+    np.testing.assert_allclose(
+        [segment.box for segment in segments], np.asarray(TIGHT_DIGITS["boxes"]) * scale + shift
+    )
+
+
+@pytest.mark.parametrize("gap", [3.25, 3.5, 3.75])
+@pytest.mark.parametrize("shift", [0.0, 0.25, 0.5, 0.75])
+def test_rounding_cannot_connect_separate_vertical_strokes(gap, shift):
+    strokes = [
+        [(10 + shift, 10), (10 + shift, 80)],
+        [(10 + shift + gap, 10), (10 + shift + gap, 80)],
+    ]
+    assert len(segment_strokes(strokes)) == 2
+
+
+def test_close_strokes_inside_the_pen_radius_can_still_connect():
+    assert len(segment_strokes([[(10, 10), (10, 80)], [(12.75, 10), (12.75, 80)]])) == 1
 
 
 @pytest.mark.parametrize("case", REGRESSIONS, ids=lambda case: case["expression"])

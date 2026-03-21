@@ -75,6 +75,18 @@ def test_compare_predicts_both_models_on_one_segment(recognizer):
     assert token["agreement"] is True
 
 
+def test_tight_six_and_four_are_recognized_separately_by_both_models(recognizer):
+    case = json.loads((ROOT / "tests/fixtures/tight_digits.json").read_text())
+    tokens = recognizer.recognize(case["strokes"], "compare")
+    for model in ("svm", "cnn"):
+        assert [token["models"][model]["predicted_label"] for token in tokens] == [
+            "3",
+            "÷",
+            "6",
+            "4",
+        ]
+
+
 def test_comparison_reports_disagreement_without_overriding_source(recognizer, monkeypatch):
     original = recognizer._prediction
 
