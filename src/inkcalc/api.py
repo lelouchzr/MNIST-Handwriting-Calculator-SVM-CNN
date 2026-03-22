@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="InkCalc", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="MNIST Handwriting Calculator — SVM & CNN", version="0.1.0", lifespan=lifespan)
 
 
 @app.get("/api/health")

@@ -6,7 +6,7 @@ Single-line handwritten digits and `+ - * / ( )`, with geometric decimal detecti
 No general mathematical OCR, fractions, superscripts, multiline layout or reliable
 separation of touching characters.
 
-InkCalc's code, pen paths and synthetic drawing routines are independent. The project
+The calculator's code, pen paths and synthetic drawing routines are independent. The project
 was inspired by [Youjia Zhang's calculator](https://github.com/YoujiaZhang/MNIST-Calculator-Handwriting-recognition);
 no upstream notebooks, images, extended dataset archive or weights are included.
 
@@ -19,7 +19,7 @@ Archive SHA-256: `731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673
 
 | Step | Implementation |
 | --- | --- |
-| Initial groups | Rasterize thin centerlines and label 8-connected components. Overlapping x ranges alone no longer merge adjacent symbols. |
+| Initial groups | Label thin 8-connected centerlines, then reject continuous horizontal gaps above the 3 px pen radius. Pixel rounding alone cannot bridge separated digits. |
 | Gap repair | Join aligned detached pieces and compatible outward endpoint tangents within bounded gaps. Rebuild the stem, then repair a horizontal junction only with a unique transverse endpoint in the gap, within the 3 px pen radius. Preserve separate minus signs. |
 | Division | Combine an aligned small dot above and below a horizontal bar; one nearby decimal is insufficient. |
 | Decimal | A compact mark below 12 logical pixels, excluding elongated short lines, bypasses both classifiers. |
@@ -28,8 +28,8 @@ Archive SHA-256: `731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673
 
 Canvas coordinates span 1,000 logical pixels. Segmentation uses geometry and fixed
 thresholds, not a learned detector. It preserves stroke-order independence. The
-three known interrupted-stroke regressions are now fixed; one case still fails
-in the fresh follow-up corpus described below.
+known interrupted-stroke and tightly spaced digit regressions are fixed in the
+follow-up audits below.
 
 ## Classifiers and training
 
@@ -132,13 +132,45 @@ Negative controls include enough clearance to avoid physically connected ink.
 
 Paired checks reject any previously correct segmentation or exact prediction
 becoming incorrect, any per-expression edit-distance increase, and any per-profile
-character-error-rate increase. All checks pass. One fresh segmentation failure
-remains; these synthetic results still do not validate new human handwriting.
+character-error-rate increase. All checks passed at that revision. Its remaining
+segmentation failure became the regression fixture for the next fix below.
 
 Reproduce with the bundled weights and a checkout containing the previous release:
 `uv run python scripts/validate_segmentation.py`. The report records input
 fingerprints, model hashes, raw expression outcomes and every gained/lost case.
 The initial reports remain historical records of the first upgrade.
+
+## Continuous-coordinate guard and new holdout
+
+The previous holdout contained one failed `3/64` expression: 8-connected raster
+rounding joined the separate `6` and `4`. Within each raster component, the fix
+requires continuous horizontal support within the existing 3 px pen radius.
+Junction and tangent repair still handle supported interrupted strokes. The saved
+failure is tested at three scales and four fractional offsets, alongside explicit
+separate-stroke and connected-stroke controls.
+
+Compared with `7d409c4f677172023b2e862ed2848c9ebb8a8271`, all model bytes,
+isolated-symbol metrics and confusions remain identical.
+
+| Corpus | Cases | Segmentation before → after | Exact SVM before → after | Exact CNN before → after |
+| --- | ---: | ---: | ---: | ---: |
+| Original regression corpus | 240 | 240 → 240 | 239 → 239 | 240 → 240 |
+| Previous holdout, now regression corpus | 1,800 | 1,799 → 1,800 | 1,779 → 1,780 | 1,796 → 1,797 |
+| New independent expression holdout | 1,800 | 1,797 → 1,800 | 1,783 → 1,786 | 1,794 → 1,797 |
+| Previous junction controls | 800 | 800 → 800 | — | — |
+| New pixel-gap controls | 800 | 777 → 800 | — | — |
+
+New expression seeds **235711, 101317, 192323** each generate 600 cases, evaluated
+after freezing this fix. Independent geometric controls use seed **67789**, with
+fractional translations, randomized gaps and stroke order. They cover vertical,
+bent and minus neighbors, crossing strokes, shared endpoints, decimals, division
+and parentheses. No tuning followed these outcomes. Per-case correctness and
+edit-distance guards and per-profile character-error guards all pass. Successful
+segmentation does not remove the remaining classification errors.
+
+Reproduce using `uv run python scripts/validate_pixel_gaps.py`. Raw results and
+fingerprints are in `models/pixel_gap_fix.json`; earlier reports stay historical.
+New samples are procedural and do not establish accuracy on new human operators.
 
 ## Reproduction and artifacts
 
@@ -155,6 +187,7 @@ are marked unavailable; requests return 503 instead of silently switching models
 | Raw predictions, confusions, per-expression results | `models/algorithm_before.json`, `models/algorithm_after.json` |
 | Before/after scores and per-profile segmentation | `models/algorithm_comparison.json` |
 | Junction fix, fresh corpora and paired regression guards | `models/segmentation_fix.json` |
+| Pixel-gap fix and independent holdout | `models/pixel_gap_fix.json` |
 | Current SVM/CNN comparison | `models/comparison.json` |
 
 Final input fingerprint:

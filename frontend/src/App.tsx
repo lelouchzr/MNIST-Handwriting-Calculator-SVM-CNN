@@ -114,16 +114,20 @@ export default function App() {
         Skip to calculator
       </a>
       <header className="site-header">
-        <a className="brand" href="#workspace" aria-label="InkCalc home">
-          inkcalc<span aria-hidden="true">/</span>
+        <a
+          className="brand"
+          href="#workspace"
+          aria-label="MNIST Calculator home"
+        >
+          mnist<span aria-hidden="true">/</span>calc
         </a>
         <div className="header-utilities">
           <a
             className="github-link"
-            href="https://github.com/lelouchzr/inkcalc"
+            href="https://github.com/lelouchzr/MNIST-Handwriting-Calculator-SVM-CNN"
             target="_blank"
             rel="noreferrer"
-            aria-label="View InkCalc on GitHub"
+            aria-label="View MNIST Handwriting Calculator on GitHub"
           >
             <GithubLogo size={25} weight="fill" />
           </a>

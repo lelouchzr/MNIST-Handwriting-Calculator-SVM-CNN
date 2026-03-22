@@ -192,7 +192,7 @@ export function downloadInk(strokes: Stroke[]): void {
   context.fillRect(0, 0, canvas.width, canvas.height);
   for (const stroke of strokes) paint(context, stroke);
   const link = document.createElement("a");
-  link.download = "inkcalc-drawing.png";
+  link.download = "mnist-calculator-drawing.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 }

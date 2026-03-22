@@ -1,7 +1,8 @@
-# InkCalc
+# MNIST Handwriting Calculator · SVM & CNN
 
-Handwritten arithmetic with a calibrated HOG + SVM and a small CNN. Draw, compare
-predictions, inspect each symbol, then calculate. Python + React; models included.
+Handwritten arithmetic using **MNIST digits**, generated operators, a calibrated
+HOG + SVM and a small CNN. Draw, compare predictions, inspect each symbol, then
+calculate. Python + React; models included. [MIT license](LICENSE).
 
 ## Recognition pipeline
 
@@ -33,7 +34,7 @@ scores are uncalibrated; a higher score alone does not identify the better model
 ## Before → after
 
 Identical inputs, seed **90210** (now also used for regression tests). Before uses revision
-[`2007190`](https://github.com/lelouchzr/inkcalc/commit/200719072ee4fc0463abc31b89973fa0fb80c6b2).
+[`2007190`](https://github.com/lelouchzr/MNIST-Handwriting-Calculator-SVM-CNN/commit/200719072ee4fc0463abc31b89973fa0fb80c6b2).
 All 16 classes remain eligible during isolated-symbol evaluation.
 
 | Evaluation | Samples | SVM before → after | CNN before → after |
@@ -53,22 +54,25 @@ Segmentation requires the correct ordered symbol count and bounding-box IoU ≥ 
 | Interrupted strokes | 40/40 | 40/40 |
 | **All** | **160/240 (66.67%)** | **240/240 (100.00%)** |
 
-The three interrupted-stroke regressions are fixed using endpoint contact at a
-broken junction. Model weights and isolated-symbol scores are unchanged.
+Interrupted junctions use endpoint contact. A continuous-coordinate guard also
+prevents pixel rounding from fusing tightly spaced digits. Model weights and
+isolated-symbol scores are unchanged.
 
-| Follow-up validation against the previous release | Cases | Before fix → after fix |
+| Latest validation against the previous release | Cases | Before fix → after fix |
 | --- | ---: | ---: |
-| Fresh expression segmentation, three unused seeds | 1,800 | 1,758 → **1,799** |
-| Fresh exact expressions, SVM / CNN | 1,800 | 1,739 / 1,755 → **1,779 / 1,796** |
-| Independent junction geometry and near-miss controls | 800 | 646 → **800** |
+| Previous expression holdout: segmentation | 1,800 | 1,799 → **1,800** |
+| New independent expression holdout: segmentation | 1,800 | 1,797 → **1,800** |
+| New exact expressions, SVM / CNN | 1,800 | 1,783 / 1,794 → **1,786 / 1,797** |
+| New pixel-gap geometry and connected-symbol controls | 800 | 777 → **800** |
 
 No previously correct case was lost, and no expression gained character errors.
-One fresh segmentation case remains incorrect. Procedural tests do **not** validate
-new human handwriting; touching characters and multiline math remain unsupported.
+These successful segmentations do not imply perfect classification. Procedural
+tests do **not** validate new human handwriting; touching characters and multiline
+math remain unsupported.
 
 Raw cases, confusions and fingerprints: [before](models/algorithm_before.json),
 [initial upgrade](models/algorithm_after.json), [initial comparison](models/algorithm_comparison.json),
-[junction fix and fresh validation](models/segmentation_fix.json).
+[junction fix](models/segmentation_fix.json), [pixel-gap fix and new validation](models/pixel_gap_fix.json).
 Data provenance and protocol: [model card](docs/model.md).
 
 ## Training
@@ -94,8 +98,8 @@ uv run python scripts/benchmark.py --stage before
 uv run python scripts/benchmark.py --stage after
 ```
 
-Audit the junction fix against the committed previous release:
-`uv run python scripts/validate_segmentation.py`.
+Audit the latest segmentation fix with the bundled weights:
+`uv run python scripts/validate_pixel_gaps.py`.
 
 Training downloads checksum-verified MNIST into ignored `.cache/`. Validation comes
 from the training split; final evaluation never selects the CNN checkpoint.
