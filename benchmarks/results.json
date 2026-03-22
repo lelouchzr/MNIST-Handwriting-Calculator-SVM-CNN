@@ -1,0 +1,135 @@
+{
+  "protocol": {
+    "baseline_ref": "benchmark-v1",
+    "training_ref": "benchmark-v2",
+    "junction_ref": "benchmark-junctions",
+    "original_seed": 90210,
+    "junction_seeds": [
+      314159,
+      271828,
+      161803
+    ],
+    "pixel_seeds": [
+      235711,
+      101317,
+      192323
+    ],
+    "geometry_seeds": [
+      515151,
+      67789
+    ],
+    "samples_per_holdout_seed": 600,
+    "limitations": "Procedural strokes share a generator family; no human-operator validation."
+  },
+  "classification": {
+    "mnist_digits": {
+      "samples": 10000,
+      "svm": {
+        "before": 0.9682,
+        "current": 0.9737
+      },
+      "cnn": {
+        "before": 0.9753,
+        "current": 0.9884
+      }
+    },
+    "pen_digits": {
+      "samples": 1000,
+      "svm": {
+        "before": 0.989,
+        "current": 1.0
+      },
+      "cnn": {
+        "before": 0.984,
+        "current": 1.0
+      }
+    },
+    "pen_operators": {
+      "samples": 1200,
+      "svm": {
+        "before": 0.9966666666666667,
+        "current": 0.9983333333333333
+      },
+      "cnn": {
+        "before": 0.9508333333333333,
+        "current": 0.9975
+      }
+    }
+  },
+  "expressions": {
+    "original": {
+      "samples": 240,
+      "baseline": {
+        "segmentation": 160,
+        "svm": 149,
+        "cnn": 141
+      },
+      "initial_upgrade": {
+        "segmentation": 237,
+        "svm": 236,
+        "cnn": 237
+      },
+      "current": {
+        "segmentation": 240,
+        "svm": 239,
+        "cnn": 240
+      }
+    },
+    "junction_holdout": {
+      "samples": 1800,
+      "before_junction_fix": {
+        "segmentation": 1758,
+        "svm": 1739,
+        "cnn": 1755
+      },
+      "after_junction_fix": {
+        "segmentation": 1799,
+        "svm": 1779,
+        "cnn": 1796
+      },
+      "current": {
+        "segmentation": 1800,
+        "svm": 1780,
+        "cnn": 1797
+      }
+    },
+    "pixel_holdout": {
+      "samples": 1800,
+      "before_pixel_fix": {
+        "segmentation": 1797,
+        "svm": 1783,
+        "cnn": 1794
+      },
+      "current": {
+        "segmentation": 1800,
+        "svm": 1786,
+        "cnn": 1797
+      }
+    }
+  },
+  "geometry": {
+    "junctions": {
+      "samples": 800,
+      "before": 646,
+      "current": 800
+    },
+    "pixel_gaps": {
+      "samples": 800,
+      "before": 777,
+      "current": 800
+    }
+  },
+  "regressed_cases": 0,
+  "increased_character_error_cases": 0,
+  "fingerprints": {
+    "original": "13f58a15e46182868b7abbd98c23f164303fdd07ccb5a18b7d1f513f4642d757",
+    "junction_holdout": "71dc4da023bee97cefb6059891c112bfab2af53b61a5d4bffd8a56e25f22216d",
+    "pixel_holdout": "60f6de00707e9c5ca7936f1002d31f0a48026f9209605236cfd21f2ff58745c2",
+    "junction_geometry": "75e55a48e489a99aeeb6e2c3862acec9df25061885f403db5cf247388a804afc",
+    "pixel_geometry": "b31a5a989bc6c8bd2f494df8854cde28fe531cfb917e75034ac87a6d056e1fe4"
+  },
+  "model_sha256": {
+    "symbols.joblib": "452a61269f8c3f769454d42f373214f9deb5b5af21d2bef38c2526b40ae8aa57",
+    "cnn.pt": "a05b59898888e2d05bdabf32c22630e9c9bf612568807061b273b27083e5f16a"
+  }
+}

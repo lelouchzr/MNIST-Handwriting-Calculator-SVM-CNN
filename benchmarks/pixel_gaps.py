@@ -6,15 +6,14 @@ import json
 import subprocess
 from pathlib import Path
 
-from benchmark import evaluate, evaluation_data, fingerprint, iou
-from pen_data import expression_cases
-from segmentation_cases import junction_cases, pixel_gap_cases
-from validate_segmentation import paired_outcomes, previous_segmenter
-
+from benchmarks.cases import junction_cases, pixel_gap_cases
+from benchmarks.junctions import paired_outcomes, previous_segmenter
+from benchmarks.recognition import evaluate, evaluation_data, fingerprint, iou
 from inkcalc.recognition import Recognizer
+from scripts.pen_data import expression_cases
 
 ROOT = Path(__file__).resolve().parents[1]
-PREVIOUS = "7d409c4f677172023b2e862ed2848c9ebb8a8271"
+PREVIOUS = "benchmark-junctions"
 FRESH_SEEDS = (235711, 101317, 192323)
 PIXEL_SEED = 67789
 
@@ -48,6 +47,7 @@ def compare_expressions(before, after, cases, expected=None, datasets=None):
 
 
 def main():
+    (ROOT / ".cache/benchmarks").mkdir(parents=True, exist_ok=True)
     after = Recognizer()
     before = copy.copy(after)
     before.segment = previous_segmenter(PREVIOUS)
@@ -108,7 +108,7 @@ def main():
         "previous_junction_controls": old_controls,
         "fresh_pixel_controls": fresh_controls,
     }
-    path = ROOT / "models/pixel_gap_fix.json"
+    path = ROOT / ".cache/benchmarks/pixel_gap_fix.json"
     path.write_text(json.dumps(report, indent=2) + "\n")
     for corpus in ("original", "previous_holdout", "fresh"):
         result = report[corpus]

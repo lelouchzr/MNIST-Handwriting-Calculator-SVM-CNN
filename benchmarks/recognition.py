@@ -11,16 +11,17 @@ from pathlib import Path
 import joblib
 import numpy as np
 import torch
-from pen_data import SYMBOLS, expression_cases, render, symbol_strokes
 from PIL import Image
 from sklearn.metrics import accuracy_score
 
 from inkcalc.features import normalize
 from inkcalc.recognition import Recognizer
+from scripts.pen_data import SYMBOLS, expression_cases, render, symbol_strokes
 
 ROOT = Path(__file__).resolve().parents[1]
-BASELINE = "200719072ee4fc0463abc31b89973fa0fb80c6b2"
+BASELINE = "benchmark-v1"
 SEED = 90210
+RAW = ROOT / ".cache/benchmarks"
 
 
 def baseline_recognizer():
@@ -41,7 +42,7 @@ def baseline_recognizer():
 
 
 def evaluation_data():
-    from training_data import MNIST_SHA256
+    MNIST_SHA256 = json.loads((ROOT / "models/metrics.json").read_text())["mnist_sha256"]
 
     archive = ROOT / ".cache/mnist.npz"
     if hashlib.sha256(archive.read_bytes()).hexdigest() != MNIST_SHA256:
@@ -233,13 +234,17 @@ def publish_metrics(result, before):
                 "after": after_metric["accuracy"],
                 "delta_percentage_points": 100 * (after_metric["accuracy"] - old["accuracy"]),
             }
-    (output / "algorithm_comparison.json").write_text(json.dumps(summary, indent=2) + "\n")
+    (RAW / "algorithm_comparison.json").write_text(json.dumps(summary, indent=2) + "\n")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", choices=["before", "after"], required=True)
+    parser.add_argument(
+        "--update-metadata", action="store_true", help="Update model metadata after retraining."
+    )
     args = parser.parse_args()
+    RAW.mkdir(parents=True, exist_ok=True)
     datasets, cases = evaluation_data()
     stamp = fingerprint(datasets, cases)
     protocol = {
@@ -250,9 +255,9 @@ def main():
         "limitations": "Pen digits/operators/expressions are synthetic, not human validation.",
         "test_policy": "Fixed final evaluation; not used for checkpoint selection.",
     }
-    output = ROOT / "models" / f"algorithm_{args.stage}.json"
+    output = RAW / f"algorithm_{args.stage}.json"
     if args.stage == "after":
-        before = json.loads((ROOT / "models/algorithm_before.json").read_text())
+        before = json.loads((RAW / "algorithm_before.json").read_text())
         if before["protocol"] != protocol:
             raise ValueError(
                 "Evaluation protocol changed; regenerate the baseline with original code."
@@ -260,7 +265,7 @@ def main():
     recognizer = baseline_recognizer() if args.stage == "before" else Recognizer()
     result = {"protocol": protocol, **evaluate(recognizer, datasets, cases)}
     output.write_text(json.dumps(result, indent=2) + "\n")
-    if args.stage == "after":
+    if args.stage == "after" and args.update_metadata:
         publish_metrics(result, before)
     print(
         json.dumps(

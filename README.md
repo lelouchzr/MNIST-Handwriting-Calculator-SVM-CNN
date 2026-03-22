@@ -33,8 +33,8 @@ scores are uncalibrated; a higher score alone does not identify the better model
 
 ## Before → after
 
-Identical inputs, seed **90210** (now also used for regression tests). Before uses revision
-[`2007190`](https://github.com/lelouchzr/MNIST-Handwriting-Calculator-SVM-CNN/commit/200719072ee4fc0463abc31b89973fa0fb80c6b2).
+Identical inputs, seed **90210** (now also used for regression tests). Before uses
+[`benchmark-v1`](https://github.com/lelouchzr/MNIST-Handwriting-Calculator-SVM-CNN/tree/benchmark-v1).
 All 16 classes remain eligible during isolated-symbol evaluation.
 
 | Evaluation | Samples | SVM before → after | CNN before → after |
@@ -70,10 +70,9 @@ These successful segmentations do not imply perfect classification. Procedural
 tests do **not** validate new human handwriting; touching characters and multiline
 math remain unsupported.
 
-Raw cases, confusions and fingerprints: [before](models/algorithm_before.json),
-[initial upgrade](models/algorithm_after.json), [initial comparison](models/algorithm_comparison.json),
-[junction fix](models/segmentation_fix.json), [pixel-gap fix and new validation](models/pixel_gap_fix.json).
-Data provenance and protocol: [model card](docs/model.md).
+Scores and input fingerprints: [compact results](benchmarks/results.json).
+Optional full evaluations: [benchmark guide](benchmarks/README.md).
+Data provenance and limits: [model card](docs/model.md).
 
 ## Training
 
@@ -94,12 +93,11 @@ flowchart LR
 ```sh
 uv run python scripts/train.py --digits 40000
 uv run python scripts/train_cnn.py --digits 40000 --epochs 12
-uv run python scripts/benchmark.py --stage before
-uv run python scripts/benchmark.py --stage after
 ```
 
-Audit the latest segmentation fix with the bundled weights:
-`uv run python scripts/validate_pixel_gaps.py`.
+The small application suite runs with `uv run pytest -q`. Randomized corpora and
+model comparisons run separately with `uv run pytest benchmarks -q` and
+`uv run python -m benchmarks.pixel_gaps`. Detailed logs stay in `.cache/benchmarks/`.
 
 Training downloads checksum-verified MNIST into ignored `.cache/`. Validation comes
 from the training split; final evaluation never selects the CNN checkpoint.

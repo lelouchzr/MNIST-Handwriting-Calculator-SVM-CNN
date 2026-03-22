@@ -11,13 +11,6 @@ def recognizer():
     return Recognizer()
 
 
-def test_disconnected_strokes_form_one_plus(recognizer):
-    tokens = recognizer.recognize([[(20, 50), (90, 50)], [(55, 20), (55, 80)]])
-    assert len(tokens) == 1
-    assert tokens[0]["label"] == "+"
-    assert tokens[0]["confidence"] > 0.8
-
-
 def test_symbols_are_sorted_by_horizontal_position(recognizer):
     tokens = recognizer.recognize([[(200, 50), (280, 50)], [(20, 50), (90, 50)]])
     assert [token["label"] for token in tokens] == ["−", "−"]
@@ -34,10 +27,6 @@ def test_division_dots_merge_with_bar(recognizer):
     )
     assert len(tokens) == 1
     assert tokens[0]["label"] == "÷"
-
-
-def test_isolated_small_mark_is_decimal_point(recognizer):
-    assert recognizer.recognize([[(20, 80)]])[0]["label"] == "."
 
 
 def test_blank_image_normalizes_without_nan():

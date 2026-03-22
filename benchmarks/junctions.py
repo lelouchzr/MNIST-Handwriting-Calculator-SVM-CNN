@@ -8,14 +8,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-from benchmark import distance, evaluate, evaluation_data, fingerprint, iou
-from pen_data import expression_cases
-from segmentation_cases import junction_cases
-
+from benchmarks.cases import junction_cases
+from benchmarks.recognition import distance, evaluate, evaluation_data, fingerprint, iou
 from inkcalc.recognition import Recognizer
+from scripts.pen_data import expression_cases
 
 ROOT = Path(__file__).resolve().parents[1]
-PREVIOUS = "cb7a7317305ddaa9d9a6de865787bf42740b0761"
+PREVIOUS = "benchmark-v2"
 FRESH_SEEDS = (314159, 271828, 161803)
 JUNCTION_SEED = 515151
 
@@ -116,6 +115,7 @@ def geometry_audit(before_segment, after_segment):
 
 
 def main():
+    (ROOT / ".cache/benchmarks").mkdir(parents=True, exist_ok=True)
     after = Recognizer()
     before = copy.copy(after)
     before.segment = previous_segmenter()
@@ -190,7 +190,7 @@ def main():
         "fresh": {"before": fresh_before, "after": fresh_after, "paired": fresh_pairs},
         "junction_controls": geometry,
     }
-    destination = ROOT / "models/segmentation_fix.json"
+    destination = ROOT / ".cache/benchmarks/segmentation_fix.json"
     destination.write_text(json.dumps(report, indent=2) + "\n")
     print(
         json.dumps(

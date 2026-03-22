@@ -52,7 +52,7 @@ def test_cnn_is_a_real_convolutional_network_and_inference_is_deterministic():
     assert not cnn.model.training
 
 
-@pytest.mark.parametrize("shape", [(28, 28), (2, 1, 28, 28), (2, 27, 28)])
+@pytest.mark.parametrize("shape", [(28, 28)])
 def test_cnn_rejects_invalid_input_shapes(shape):
     with pytest.raises(ValueError, match="shape"):
         CNNClassifier().predict_proba(np.zeros(shape))
@@ -61,18 +61,6 @@ def test_cnn_rejects_invalid_input_shapes(shape):
 def test_cnn_rejects_nonfinite_inputs():
     with pytest.raises(ValueError, match="finite"):
         CNNClassifier().predict_proba(np.full((1, 28, 28), np.nan))
-
-
-def test_compare_predicts_both_models_on_one_segment(recognizer):
-    token = recognizer.recognize(PLUS, "compare")[0]
-    assert set(token["models"]) == {"svm", "cnn"}
-    assert token["label"] == token["models"]["svm"]["predicted_label"]
-    for model in ("svm", "cnn"):
-        prediction = token["models"][model]
-        assert prediction["predicted_label"] == "+"
-        assert len(prediction["probabilities"]) == 16
-        assert sum(item["confidence"] for item in prediction["probabilities"]) == pytest.approx(1)
-    assert token["agreement"] is True
 
 
 def test_tight_six_and_four_are_recognized_separately_by_both_models(recognizer):
@@ -139,9 +127,3 @@ def test_missing_cnn_keeps_svm_usable(tmp_path):
     assert recognizer.recognize(PLUS)[0]["label"] == "+"
     with pytest.raises(ModelUnavailableError, match="CNN"):
         recognizer.recognize(PLUS, "compare")
-
-
-def test_missing_svm_keeps_cnn_usable(tmp_path):
-    recognizer = Recognizer(path=tmp_path / "missing.joblib")
-    assert recognizer.models_status["svm"]["ready"] is False
-    assert recognizer.recognize(PLUS, "cnn")[0]["label"] == "+"

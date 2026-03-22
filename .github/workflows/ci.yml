@@ -17,7 +17,7 @@ jobs:
           python-version: '3.12'
           enable-cache: true
       - run: uv sync --locked
-      - run: uv run ruff check src tests scripts
+      - run: uv run ruff check src tests scripts benchmarks
       - run: uv run pytest -q
   frontend:
     runs-on: ubuntu-latest
